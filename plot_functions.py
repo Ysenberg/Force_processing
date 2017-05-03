@@ -1,0 +1,431 @@
+import numpy as np
+from scipy.optimize import lsq_linear
+from scipy.interpolate import interp1d
+from scipy import constants
+import matplotlib.colors as colors
+import matplotlib.pyplot as plt
+import yaml
+from yaml import load, dump
+
+def plot_diff_regions_f_vs_t(time,force,boundaries,file_splitted_name):
+    """
+    Returns a plot of the different regimes
+    Force versus time.
+    
+    Parameters
+    ----------
+    time : array
+        Time.
+    force : array
+        Force.
+    file_splitted_names : list of strings
+        Name of the filed used now splitted in strings.
+    
+    Returns
+    -------
+    png file
+    
+    """
+    plt.plot(time[:boundaries['approach_to_contact']],
+             force[:boundaries['approach_to_contact']], 
+             'sandybrown', marker='o', linestyle='', ms='3')
+
+    plt.plot(time[boundaries['approach_to_contact']:boundaries['contact_to_penetration']],
+             force[boundaries['approach_to_contact']:boundaries['contact_to_penetration']], 
+             'salmon', marker='o', linestyle='', ms='3')
+
+    plt.plot(time[boundaries['contact_to_penetration']:boundaries['penetration_to_relaxation']],
+             force[boundaries['contact_to_penetration']:boundaries['penetration_to_relaxation']], 
+             'darkseagreen', marker='o', linestyle='', ms='3')
+ 
+    plt.plot(time[boundaries['penetration_to_relaxation']:boundaries['relaxation_to_elastic']],
+             force[boundaries['penetration_to_relaxation']:boundaries['relaxation_to_elastic']], 
+             'palegreen', marker='o', linestyle='', ms='3')
+
+    plt.plot(time[boundaries['relaxation_to_elastic']:boundaries['elastic_to_fluidized']],
+             force[boundaries['relaxation_to_elastic']:boundaries['elastic_to_fluidized']], 
+             'mediumaquamarine', marker='o', linestyle='', ms='3')
+
+    plt.plot(time[boundaries['elastic_to_fluidized']:boundaries['fluidized_to_meniscus']],
+             force[boundaries['elastic_to_fluidized']:boundaries['fluidized_to_meniscus']], 
+             'cornflowerblue', marker='o', linestyle='', ms='3')
+
+    plt.plot(time[boundaries['fluidized_to_meniscus']:boundaries['meniscus_to_breakage']],
+             force[boundaries['fluidized_to_meniscus']:boundaries['meniscus_to_breakage']], 
+             'mediumslateblue', marker='o', linestyle='', ms='3')
+
+    plt.plot(time[boundaries['meniscus_to_breakage']:],
+             force[boundaries['meniscus_to_breakage']:], 
+             'purple', marker='o', linestyle='', ms='3')
+    plt.xlabel('Time (ms)')
+    plt.ylabel('Force (mN)')
+    plt.title(''.join(['Force_vs_tps_', file_splitted_name[0] , '_', file_splitted_name[1] ,'_',file_splitted_name[2]]))
+    name = ''.join(['Force_vs_tps_', file_splitted_name[0] , '_', file_splitted_name[1] ,'_',file_splitted_name[2],'.png'])
+    plt.savefig(name, bbox_inches='tight', dpi=200)
+    plt.close()
+
+
+def plot_diff_regions_f_vs_p(position,force,boundaries,file_splitted_name):
+    """
+    Returns a plot of the different regimes
+    Force versus position.
+    
+    Parameters
+    ----------
+    position : array
+        Position.
+    force : array
+        Force.
+    file_splitted_names : list of strings
+        Name of the filed used now splitted in strings.
+    
+    Returns
+    -------
+    png file
+    
+    """
+    plt.plot(position[:boundaries['approach_to_contact']],
+             force[:boundaries['approach_to_contact']], 
+             'sandybrown', marker='o', linestyle='', ms='3')
+
+    plt.plot(position[boundaries['approach_to_contact']:boundaries['contact_to_penetration']],
+             force[boundaries['approach_to_contact']:boundaries['contact_to_penetration']], 
+             'salmon', marker='o', linestyle='', ms='3')
+
+    plt.plot(position[boundaries['contact_to_penetration']:boundaries['penetration_to_relaxation']],
+             force[boundaries['contact_to_penetration']:boundaries['penetration_to_relaxation']], 
+             'darkseagreen', marker='o', linestyle='', ms='3')
+     
+    plt.plot(position[boundaries['penetration_to_relaxation']:boundaries['relaxation_to_elastic']],
+             force[boundaries['penetration_to_relaxation']:boundaries['relaxation_to_elastic']], 
+             'palegreen', marker='o', linestyle='', ms='3')
+
+    plt.plot(position[boundaries['relaxation_to_elastic']:boundaries['elastic_to_fluidized']],
+             force[boundaries['relaxation_to_elastic']:boundaries['elastic_to_fluidized']], 
+             'mediumaquamarine', marker='o', linestyle='', ms='3')
+
+    plt.plot(position[boundaries['elastic_to_fluidized']:boundaries['fluidized_to_meniscus']],
+             force[boundaries['elastic_to_fluidized']:boundaries['fluidized_to_meniscus']], 
+             'cornflowerblue', marker='o', linestyle='', ms='3')
+
+    plt.plot(position[boundaries['fluidized_to_meniscus']:boundaries['meniscus_to_breakage']],
+             force[boundaries['fluidized_to_meniscus']:boundaries['meniscus_to_breakage']], 
+             'mediumslateblue', marker='o', linestyle='', ms='3')
+
+    plt.plot(position[boundaries['meniscus_to_breakage']:],
+             force[boundaries['meniscus_to_breakage']:], 
+             'purple', marker='o', linestyle='', ms='3')
+    plt.xlabel('Position (mm)')
+    plt.ylabel('Force (mN)')
+    plt.title(''.join(['Force_vs_position_', file_splitted_name[0] , '_', file_splitted_name[1] ,'_',file_splitted_name[2]]))
+    name = ''.join(['Force_vs_position_', file_splitted_name[0] , '_', file_splitted_name[1] ,'_',file_splitted_name[2],'.png'])
+    plt.savefig(name, bbox_inches='tight', dpi=200)
+    plt.close()
+
+
+def plot_f_vs_t_subplots(time,force,boundaries,file_splitted_name):
+    """
+    Returns a plot of the different regimes, each being in a different subplot
+    Force vs time.
+
+
+    Parameters
+    ----------
+    time : array
+        Time.
+    force : array
+        Force.
+    boundaries : dictionnary
+        Limits of the regions
+    file_splitted_names : list of strings
+        Name of the filed used now splitted in strings.
+    
+    Returns
+    -------
+    png file
+    
+    """
+    fig, axes = plt.subplots(ncols=2, nrows=4, figsize=(15, 20))
+    ax = axes.ravel()
+    ax[0].plot(time[:boundaries['approach_to_contact']], 
+               force[:boundaries['approach_to_contact']], 'sandybrown', marker='o', linestyle='')
+    ax[0].set_title('Approach')
+
+    ax[1].plot(time[boundaries['approach_to_contact']:boundaries['contact_to_penetration']], 
+               force[boundaries['approach_to_contact']:boundaries['contact_to_penetration']], 'salmon', marker='o', linestyle='')
+    ax[1].set_title('Contact')
+
+    ax[2].plot(time[boundaries['contact_to_penetration']:boundaries['penetration_to_relaxation']], 
+               force[boundaries['contact_to_penetration']:boundaries['penetration_to_relaxation']],'darkseagreen', marker='o', linestyle='')
+    ax[2].set_title('Penetration')
+
+    ax[3].plot(time[boundaries['penetration_to_relaxation']:boundaries['relaxation_to_elastic']], 
+               force[boundaries['penetration_to_relaxation']:boundaries['relaxation_to_elastic']], 'palegreen', marker='o', linestyle='')
+    ax[3].set_title('Relaxation')
+
+    ax[4].plot(time[boundaries['relaxation_to_elastic']:boundaries['elastic_to_fluidized']], 
+               force[boundaries['relaxation_to_elastic']:boundaries['elastic_to_fluidized']], 'mediumaquamarine', marker='o', linestyle='')
+    ax[4].set_title('Elastic')
+
+    ax[5].plot(time[boundaries['elastic_to_fluidized']:boundaries['fluidized_to_meniscus']], 
+               force[boundaries['elastic_to_fluidized']:boundaries['fluidized_to_meniscus']], 'cornflowerblue', marker='o', linestyle='')
+    ax[5].set_title('Fluidized')
+
+    ax[6].plot(time[boundaries['fluidized_to_meniscus']:boundaries['meniscus_to_breakage']], 
+               force[boundaries['fluidized_to_meniscus']:boundaries['meniscus_to_breakage']], 'mediumslateblue', marker='o', linestyle='')
+    ax[6].set_title('Meniscus')
+
+    ax[7].plot(time[boundaries['meniscus_to_breakage']:], 
+               force[boundaries['meniscus_to_breakage']:], 'purple', marker='o', linestyle='')
+    ax[7].set_title('End!')
+
+    plt.title(''.join(['Force_vs_time_subplots_', file_splitted_name[0] , '_', file_splitted_name[1] ,'_',file_splitted_name[2]]))
+    name = ''.join(['Force_vs_time_subplots_', file_splitted_name[0] , '_', file_splitted_name[1] ,'_',file_splitted_name[2],'.png'])
+    plt.savefig(name, bbox_inches='tight', dpi=200)
+    plt.close()
+
+
+def plot_s_vs_t(time,stress,boundaries,file_splitted_name):
+    """
+    Returns a plot of the different regimes from contact to fluidized regime (both comprised)
+    The two next plots corresponds  respectively to the regimes from contact to relaxation and
+    to the ones from elastic regime to fluidized regime. 
+    Stress vs time.
+    
+    Parameters
+    ----------
+    time : array
+        Time.
+    stress : array
+        Stress.
+    boundaries : dictionnary
+        Limits of the regions
+    file_splitted_names : list of strings
+        Name of the filed used now splitted in strings.
+    
+    Returns
+    -------
+    png file
+    
+    """
+    fig, axes = plt.subplots(ncols=1, nrows=3, figsize=(10,15))
+    ax = axes.ravel()
+    #ax[0].plot(time[boundaries['approach_to_contact']:boundaries['contact_to_penetration']],
+    #         stress[boundaries['approach_to_contact']:boundaries['contact_to_penetration']], 
+    #         'salmon', marker='o', linestyle='')
+
+    ax[0].plot(time[boundaries['contact_to_penetration']:boundaries['penetration_to_relaxation']],
+             stress[boundaries['contact_to_penetration']:boundaries['penetration_to_relaxation']], 
+             'darkseagreen', marker='o', linestyle='')
+
+    ax[0].plot(time[boundaries['penetration_to_relaxation']:boundaries['relaxation_to_elastic']],
+             stress[boundaries['penetration_to_relaxation']:boundaries['relaxation_to_elastic']], 
+             color='palegreen', marker='o', linestyle='')
+     
+    ax[0].plot(time[boundaries['penetration_to_relaxation']:boundaries['relaxation_to_elastic']],
+             stress[boundaries['penetration_to_relaxation']:boundaries['relaxation_to_elastic']], 
+             'palegreen', marker='o', linestyle='')
+
+    ax[0].plot(time[boundaries['relaxation_to_elastic']:boundaries['elastic_to_fluidized']],
+             stress[boundaries['relaxation_to_elastic']:boundaries['elastic_to_fluidized']], 
+             'mediumaquamarine', marker='o', linestyle='')
+
+    ax[0].plot(time[boundaries['elastic_to_fluidized']:boundaries['fluidized_to_meniscus']],
+             stress[boundaries['elastic_to_fluidized']:boundaries['fluidized_to_meniscus']], 
+             'cornflowerblue', marker='o', linestyle='')
+
+    ax[0].set_xlabel('Time (ms)')
+    ax[0].set_ylabel('Stress (mN/mm²)')
+    ax[0].set_title(''.join(['Stress_vs_Time_', file_splitted_name[0] , '_', file_splitted_name[1] ,'_',file_splitted_name[2]]))
+
+    #ax[1].plot(time[boundaries['approach_to_contact']:boundaries['contact_to_penetration']],
+    #         stress[boundaries['approach_to_contact']:boundaries['contact_to_penetration']], 
+    #         'salmon', marker='o', linestyle='')
+
+    ax[1].plot(time[boundaries['contact_to_penetration']:boundaries['penetration_to_relaxation']],
+             stress[boundaries['contact_to_penetration']:boundaries['penetration_to_relaxation']], 
+             'darkseagreen', marker='o', linestyle='')
+
+    ax[1].plot(time[boundaries['penetration_to_relaxation']:boundaries['relaxation_to_elastic']],
+             stress[boundaries['penetration_to_relaxation']:boundaries['relaxation_to_elastic']], 
+             color='palegreen', marker='o', linestyle='')
+     
+    ax[1].plot(time[boundaries['penetration_to_relaxation']:boundaries['relaxation_to_elastic']],
+             stress[boundaries['penetration_to_relaxation']:boundaries['relaxation_to_elastic']], 
+             'palegreen', marker='o', linestyle='')
+
+    ax[1].set_xlabel('Time (ms)')
+    ax[1].set_ylabel('Stress (mN/mm²)')
+    ax[1].set_title(''.join(['Stress_vs_Time_', file_splitted_name[0] , '_', file_splitted_name[1] ,'_',file_splitted_name[2]]))
+
+
+    ax[2].plot(time[boundaries['relaxation_to_elastic']:boundaries['elastic_to_fluidized']],
+             stress[boundaries['relaxation_to_elastic']:boundaries['elastic_to_fluidized']], 
+             'mediumaquamarine', marker='o', linestyle='')
+
+    ax[2].plot(time[boundaries['elastic_to_fluidized']:boundaries['fluidized_to_meniscus']],
+             stress[boundaries['elastic_to_fluidized']:boundaries['fluidized_to_meniscus']], 
+             'cornflowerblue', marker='o', linestyle='')
+
+    ax[2].set_xlabel('Time (ms)')
+    ax[2].set_ylabel('Stress (mN/mm²)')
+    ax[2].set_title(''.join(['Stress_vs_Time_', file_splitted_name[0] , '_', file_splitted_name[1] ,'_',file_splitted_name[2]]))
+
+    plt.title(''.join(['Stress_vs_Time_', file_splitted_name[0] , '_', file_splitted_name[1] ,'_',file_splitted_name[2]]))
+    name = ''.join(['Stress_vs_Time_', file_splitted_name[0] , '_', file_splitted_name[1] ,'_',file_splitted_name[2],'.png'])
+    plt.savefig(name, bbox_inches='tight')
+    plt.close()
+
+
+def plot_boundaries(time,force,boundaries,file_splitted_name):
+    """
+    Returns a plot of the force versus time, enlighting the boundaries
+    
+    Parameters
+    ----------
+    time : array
+        Time.
+    force : array
+        Force.
+    boundaries : dictionnary
+        Limits of the regions
+    file_splitted_names : list of strings
+        Name of the filed used now splitted in strings.
+    
+    Returns
+    -------
+    png file
+    
+    """
+    plt.plot(time, force, 'o', ms ='2')
+    plt.plot(time[boundaries['approach_to_contact']], force[boundaries['approach_to_contact']], 'ro')
+    plt.plot(time[boundaries['contact_to_penetration']], force[boundaries['contact_to_penetration']], 'ro')
+    plt.plot(time[boundaries['penetration_to_relaxation']], force[boundaries['penetration_to_relaxation']], 'ro')
+    plt.plot(time[boundaries['relaxation_to_elastic']], force[boundaries['relaxation_to_elastic']], 'ro')
+    plt.plot(time[boundaries['elastic_to_fluidized']], force[boundaries['elastic_to_fluidized']], 'ro')
+    plt.plot(time[boundaries['fluidized_to_meniscus']], force[boundaries['fluidized_to_meniscus']], 'ro')
+    plt.plot(time[boundaries['meniscus_to_breakage']], force[boundaries['meniscus_to_breakage']], 'ro')
+    plt.xlabel('Time (ms)')
+    plt.ylabel('Force (mN)')
+    plt.minorticks_on()
+    plt.title(''.join(['Force_vs_tps_boundaries_', file_splitted_name[0] , '_', file_splitted_name[1] ,'_',file_splitted_name[2]]))
+    name = ''.join(['Force_vs_tps_boundaries_', file_splitted_name[0] , '_', file_splitted_name[1] ,'_',file_splitted_name[2],'.png'])
+    plt.savefig(name, bbox_inches='tight', dpi=200)
+    plt.close()
+
+
+def plot_s_vs_p(position,stress,boundaries,file_splitted_name):
+    """
+    Returns a plot of the different regimes of the stress versus position 
+    
+    Parameters
+    ----------
+    position : array
+        Position.
+    stress : array
+        Stress.
+    boundaries : dictionnary
+        Limits of the regions
+    file_splitted_names : list of strings
+        Name of the filed used now splitted in strings.
+    
+    Returns
+    -------
+    png file
+    
+    """
+    fig, axes = plt.subplots(ncols=1, nrows=3, figsize=(10,15))
+    ax = axes.ravel()
+    #ax[0].plot(position[boundaries['approach_to_contact']:boundaries['contact_to_penetration']],
+    #         stress[boundaries['approach_to_contact']:boundaries['contact_to_penetration']], 
+    #        'salmon', marker='o', linestyle='')
+
+    ax[0].plot(position[boundaries['contact_to_penetration']:boundaries['penetration_to_relaxation']],
+             stress[boundaries['contact_to_penetration']:boundaries['penetration_to_relaxation']], 
+             'darkseagreen', marker='o', linestyle='')
+
+    ax[0].plot(position[boundaries['penetration_to_relaxation']:boundaries['relaxation_to_elastic']],
+             stress[boundaries['penetration_to_relaxation']:boundaries['relaxation_to_elastic']], 
+             color='palegreen', marker='o', linestyle='')
+     
+    ax[0].plot(position[boundaries['penetration_to_relaxation']:boundaries['relaxation_to_elastic']],
+             stress[boundaries['penetration_to_relaxation']:boundaries['relaxation_to_elastic']], 
+             'palegreen', marker='o', linestyle='')
+
+    ax[0].plot(position[boundaries['relaxation_to_elastic']:boundaries['elastic_to_fluidized']],
+             stress[boundaries['relaxation_to_elastic']:boundaries['elastic_to_fluidized']], 
+             'mediumaquamarine', marker='o', linestyle='')
+
+    ax[0].plot(position[boundaries['elastic_to_fluidized']:boundaries['fluidized_to_meniscus']],
+             stress[boundaries['elastic_to_fluidized']:boundaries['fluidized_to_meniscus']], 
+             'cornflowerblue', marker='o', linestyle='')
+
+    ax[0].set_xlabel('Position (mm)')
+    ax[0].set_ylabel('Stress (mN/mm²)')
+    ax[0].set_title(''.join(['Stress_vs_Position_', file_splitted_name[0] , '_', file_splitted_name[1] ,'_',file_splitted_name[2]]))
+
+    #ax[1].plot(position[boundaries['approach_to_contact']:boundaries['contact_to_penetration']],
+    #         stress[boundaries['approach_to_contact']:boundaries['contact_to_penetration']], 
+    #         'salmon', marker='o', linestyle='')
+
+    ax[1].plot(position[boundaries['contact_to_penetration']:boundaries['penetration_to_relaxation']],
+             stress[boundaries['contact_to_penetration']:boundaries['penetration_to_relaxation']], 
+             'darkseagreen', marker='o', linestyle='')
+
+    ax[1].plot(position[boundaries['penetration_to_relaxation']:boundaries['relaxation_to_elastic']],
+             stress[boundaries['penetration_to_relaxation']:boundaries['relaxation_to_elastic']], 
+             color='palegreen', marker='o', linestyle='')
+     
+    ax[1].plot(position[boundaries['penetration_to_relaxation']:boundaries['relaxation_to_elastic']],
+             stress[boundaries['penetration_to_relaxation']:boundaries['relaxation_to_elastic']], 
+             'palegreen', marker='o', linestyle='')
+
+    ax[1].set_xlabel('Position (mm)')
+    ax[1].set_ylabel('Stress (mN/mm²)')
+    ax[1].set_title(''.join(['Stress_vs_Position_', file_splitted_name[0] , '_', file_splitted_name[1] ,'_',file_splitted_name[2]]))
+
+
+    ax[2].plot(position[boundaries['relaxation_to_elastic']:boundaries['elastic_to_fluidized']],
+             stress[boundaries['relaxation_to_elastic']:boundaries['elastic_to_fluidized']], 
+             'mediumaquamarine', marker='o', linestyle='')
+
+    ax[2].plot(position[boundaries['elastic_to_fluidized']:boundaries['fluidized_to_meniscus']],
+             stress[boundaries['elastic_to_fluidized']:boundaries['fluidized_to_meniscus']], 
+             'cornflowerblue', marker='o', linestyle='')
+
+    ax[2].set_xlabel('Position (mm)')
+    ax[2].set_ylabel('Stress (mN/mm²)')
+    ax[2].set_title(''.join(['Stress_vs_Time_', file_splitted_name[0] , '_', file_splitted_name[1] ,'_',file_splitted_name[2]]))
+    plt.minorticks_on()
+    plt.title(''.join(['Stress_vs_Position_', file_splitted_name[0] , '_', file_splitted_name[1] ,'_',file_splitted_name[2]]))
+    name = ''.join(['Stress_vs_Position_', file_splitted_name[0] , '_', file_splitted_name[1] ,'_',file_splitted_name[2],'.png'])
+    plt.savefig(name, bbox_inches='tight', dpi=200)
+    plt.close()
+
+
+def plot_f_vs_t(time,force,color,file_splitted_name):
+    """
+    Plots the force versus time for the current file. 
+    Returns nothing.
+    
+    Parameters
+    ----------
+    time : array
+        Time.
+    force : array
+        Force.
+    color : string
+        One of the named colors of matplotlib
+    file_splitted_names : list of strings
+        Name of the filed used now splitted in strings.
+    
+    Returns
+    -------
+    nothing
+
+    """
+    plt.plot(time, force, color, marker='o', linestyle='', ms ='2', label=file_splitted_name[1])
+    plt.legend()
+
+
+

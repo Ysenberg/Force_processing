@@ -1,0 +1,16 @@
+# Infos sur la manip du 24-04-2017
+---
+  R_bubbles: 0.7 #------------------------------------------------------ Rayon des bulles en mm
+  Phi: 0.000013 #------------------------------------------------------- Fract° liq au milieu de la partie immergée de la lame
+  foam_height: 150 #---------------------------------------------------- Hauteur de mousse en mm
+  plate_width: 10 #----------------------------------------------------- Largeur de la lame en mm
+  plate_length: 20 #---------------------------------------------------- Longueur de la lame en mm
+  cuve: Murs_variables_1 #---------------------------------------------- Caractéristiques de la cuve utilisée
+  manip_date: 24_avr_2017 #--------------------------------------------- Date de la manip
+  solution_moussante: Argos_10%_volumique #----------------------------- Type de solution utilisée
+  gamma_solution : 27.43 # --------------------------------------------- Tension de surface de la solution en mN/m
+  rho_solution : 1.0023 # ---------------------------------------------- Densité de la solution en g/cm³
+  type_lame: wafer #---------------------------------------------------- Précise si la lame est un wafer ou non
+  gauge: '32' #--------------------------------------------------------- aiguille utilisée
+  pressure: 75 #-------------------------------------------------------- pression en mbar
+  dist_plate_to_foam: 10 #---------------------------------------------- distance entre la lame et la mousse au début de l'exp en mm
