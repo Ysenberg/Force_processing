@@ -39,10 +39,16 @@ def get_boundaries(time, position, force, variables):
     arg_approach_to_contact = far_from_threshold.nonzero()[0][0]
     
     
-    # Contact to penetration
-    far_from_threshold = (force - zero_load) / force > threshold_force_in
-    arg_contact_to_penetration = far_from_threshold.nonzero()[0][0]
+    # # Contact to penetration
+    # far_from_threshold = (force - zero_load) / force > threshold_force_in
+    # arg_contact_to_penetration = far_from_threshold.nonzero()[0][0]
+    # 
+    test_force = force[arg_approach_to_contact:] - zero_load
+    test_force[test_force < 0] = 0
+    arg_contact_to_penetration = test_force.nonzero()[0][0] + arg_approach_to_contact
     assert(arg_approach_to_contact <= arg_contact_to_penetration)
+
+
     
     # Penetration to relaxation
     # End of motion
@@ -101,6 +107,7 @@ def get_penetrated_area(position, boundaries, variables):
     area[area < 0] = 0
     return area
 
+
 def get_stress(boundaries, force, position, variables):
     """
     Calculate stress by dividing force by the penetrated area
@@ -121,12 +128,13 @@ def get_stress(boundaries, force, position, variables):
     array
     
     """
-    stress = [0]*boundaries['contact_to_penetration']
+    stress = [0]*(boundaries['contact_to_penetration'])
     stress.extend(force[boundaries['contact_to_penetration']:boundaries['fluidized_to_meniscus']])
     stress.extend([0]*(len(position) - boundaries['fluidized_to_meniscus']))
     penetrated_area = get_penetrated_area(position, boundaries, variables)
     stress[boundaries['contact_to_penetration']:boundaries['fluidized_to_meniscus']] /= penetrated_area[boundaries['contact_to_penetration']:boundaries['fluidized_to_meniscus']]
     return stress
+
 
 def get_names_files_same_plate(bd):
     """

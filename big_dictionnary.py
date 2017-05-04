@@ -10,7 +10,6 @@ import matplotlib.colors as colors
 import matplotlib.pyplot as plt
 import yaml
 import re
-from collections import Counter
 from yaml import load, dump
 import plot_functions as myplt
 import get_functions as gt
@@ -38,6 +37,9 @@ for filename in glob.glob('*.txt'):
 	time = data[0]
 	position = data[1]
 	force = data[2]
+
+
+
 	#Trouver la vitesse associée au fichier
 	speed = int(re.findall(r'\d+', V)[0])
 	#Trouver la lame associée au fichier 
@@ -45,7 +47,20 @@ for filename in glob.glob('*.txt'):
 
 
 	boundaries = gt.get_boundaries(time, position, force, variables)
+
+	# Mettre la force à zéro au début 
+	dist_init = variables['dist_plate_to_foam']
+	number_first_points = (int(float(((len(np.nonzero((position - dist_init)<0)[0]))/2))))
+	zero_load = force[:number_first_points].mean()
+	force -= zero_load
+
+	# Calcul du stress
+
 	stress = gt.get_stress(boundaries, force, position, variables)
+
+
+
+
 	# Le fit de la partie pénétration ! 
 	x = time[boundaries['contact_to_penetration']:boundaries['penetration_to_relaxation']]
 	y = position[boundaries['contact_to_penetration']:boundaries['penetration_to_relaxation']]
@@ -177,23 +192,30 @@ def plot_all_velocities(bd):
 #plt.savefig('Slope_penetration_vs_speed_' + Lam + '.png')
 #plt.close()
 
+### Tracer le stress moyen pendant la pénétration pour toutes les vitesses d'une même lame 
 
-
-
-### But d'ici : créer une fonction qui renvoie tous les fichiers de la même lame dans une liste.
-
-
-names_by_plate = get_names_files_same_plate(bd)
-print(names_by_plate)
+names_by_plate = gt.get_names_files_same_plate(bd)
 
 for lame in names_by_plate.keys():
 	print(lame)
+	speed = []
+	mean_stress = []
+	std_stress = []
+	'stress_' + lame 
 	for name in names_by_plate[lame]:
-		mean_stress = bd[name]['stress'][bd[name]['boundaries']['contact_to_penetration']:bd[name]['boundaries']['penetration_to_relaxation']].mean()
-		std_stress = np.std(bd[name]['stress'][bd[name]['boundaries']['contact_to_penetration']:bd[name]['boundaries']['penetration_to_relaxation']])
+		speed += [bd[name]['speed']]
+		mean_stress += [np.asarray(bd[name]['stress'][bd[name]['boundaries']['contact_to_penetration']+1:bd[name]['boundaries']['penetration_to_relaxation']]).mean()]
+		std_stress += [np.std(bd[name]['stress'][bd[name]['boundaries']['contact_to_penetration']+1:bd[name]['boundaries']['penetration_to_relaxation']])]
+
+	plt.plot(speed,mean_stress,label=bd[name]['file_splitted_name'][0], linestyle='', marker='o')
+	plt.legend()
+
+plt.title('Mean_stress_while_penetration_vs_speed_' )
+plt.savefig('Mean_stress_while_penetration_vs_speed_' + '.png')
+plt.close()
 
 
-		print(name)
+		
 
 
 	
