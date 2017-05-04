@@ -4,6 +4,7 @@ from scipy.interpolate import interp1d
 from scipy import constants
 import matplotlib.colors as colors
 import matplotlib.pyplot as plt
+import get_functions as gt
 import yaml
 from yaml import load, dump
 
@@ -428,4 +429,36 @@ def plot_f_vs_t(time,force,color,file_splitted_name):
     plt.legend()
 
 
+def plot_mean_stress_vs_speed(bd):
+    """
+    Saves a plot of all mean stress during penetration period for all velocities
+    
+    Parameters
+    ----------
+    bd : dictionnary
+        Dictionnary containing informations about all *.txt files in the folder.
+    
+    Returns
+    -------
+    Nothing, but saves a .png
+    
+    """
 
+    names_by_plate = gt.get_names_files_same_plate(bd)
+
+    for lame in names_by_plate.keys():
+        speed = []
+        mean_stress = []
+        std_stress = []
+        for name in names_by_plate[lame]:
+            speed += [bd[name]['speed']]
+            mean_stress += [np.asarray(bd[name]['stress'][bd[name]['boundaries']['contact_to_penetration']+1:bd[name]['boundaries']['penetration_to_relaxation']]).mean()]
+            std_stress += [np.std(bd[name]['stress'][bd[name]['boundaries']['contact_to_penetration']+1:bd[name]['boundaries']['penetration_to_relaxation']])]
+
+        plt.plot(speed,mean_stress,label=bd[name]['file_splitted_name'][0], linestyle='', marker='o', ms = 2)
+        plt.errorbar(speed,mean_stress, yerr=std_stress, fmt='o', ms = 4)
+        plt.legend()
+
+    plt.title('Mean_stress_while_penetration_vs_speed_' )
+    plt.savefig('Mean_stress_while_penetration_vs_speed_' + '.png')
+    plt.close()
