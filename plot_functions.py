@@ -462,3 +462,93 @@ def plot_mean_stress_vs_speed(bd):
     plt.title('Mean_stress_while_penetration_vs_speed_' )
     plt.savefig('Mean_stress_while_penetration_vs_speed_' + '.png')
     plt.close()
+
+
+
+def plot_all_velocities(bd):
+    """
+    Save plots involving all files in *txt in the folder
+    
+    Parameters
+    ----------
+    bd : dictionnary
+        Dictionnary containing informations about all *.txt files in the folder.
+    
+    Returns
+    -------
+    Nothing, but saves png
+    
+    """
+    names_by_plate = gt.get_names_files_same_plate(bd)
+
+    for lame in names_by_plate.keys():
+
+        for name in names_by_plate[lame]:
+            plt.plot(bd[name]['time'],bd[name]['force'], marker='o', linestyle='-', ms ='2', label=bd[name]['file_splitted_name'][1])
+            plt.legend()
+        plt.xlabel('Time (ms)')
+        plt.ylabel('Force (mN)')
+        plt.minorticks_on()
+        plt.title('Force_vs_Time' + bd[name]['file_splitted_name'][0])
+        name_file = ''.join(['Force_vs_time_varV_', bd[name]['file_splitted_name'][0], '.png'])
+        plt.savefig(name_file, bbox_inches='tight')
+        plt.close()
+        for name in names_by_plate[lame]:
+            plt.plot(bd[name]['position'],bd[name]['force'], marker='o', linestyle='-', ms ='2', label=bd[name]['file_splitted_name'][1])
+            plt.legend()
+        plt.xlabel('Position (mm)')
+        plt.ylabel('Force (mN)')
+        plt.minorticks_on()
+        plt.title('Force_vs_Position' + bd[name]['file_splitted_name'][0])
+        name_file = ''.join(['Position_vs_force_varV_', bd[name]['file_splitted_name'][0], '.png'])
+        plt.savefig(name_file, bbox_inches='tight')
+        plt.close()
+        for name in names_by_plate[lame]:
+            plt.plot(bd[name]['time'],bd[name]['stress'], marker='o', linestyle='-', ms ='2', label=bd[name]['file_splitted_name'][1])
+            plt.legend()
+        plt.xlabel('Time (ms)')
+        plt.ylabel('Stress (mN/mm²)')
+        plt.minorticks_on()
+        plt.title('Stress_vs_time' + bd[name]['file_splitted_name'][0])
+        name_file = ''.join(['Stress_vs_time_varV', bd[name]['file_splitted_name'][0], '.png'])
+        plt.savefig(name_file, bbox_inches='tight')
+        plt.close()
+        for name in names_by_plate[lame]:
+            plt.plot(bd[name]['position'],bd[name]['stress'], marker='o', linestyle='-', ms ='2', label=bd[name]['file_splitted_name'][1])
+            plt.legend()
+        plt.xlabel('Position (mm)')
+        plt.ylabel('Stress (mN/mm²)')
+        plt.minorticks_on()
+        plt.title('Stress_vs_position' + bd[name]['file_splitted_name'][0])
+        name_file = ''.join(['Stress_vs_position_varV', bd[name]['file_splitted_name'][0], '.png'])
+        plt.savefig(name_file, bbox_inches='tight')
+        plt.close()
+
+
+def plot_for_each_file(bd):
+
+    """
+    Save plots involving only one file each
+    
+    Parameters
+    ----------
+    bd : dictionnary
+        Dictionnary containing informations about all *.txt files in the folder.
+    
+    Returns
+    -------
+    Nothing, but saves png
+    
+    """
+
+    for name in bd.keys():
+        # vérification
+        myplt.plot_boundaries(bd[name]['time'],bd[name]['force'],bd[name]['boundaries'],bd[name]['file_splitted_name'])
+        # la force en fonction de la position 
+        myplt.plot_diff_regions_f_vs_p(bd[name]['position'],bd[name]['force'],bd[name]['boundaries'],bd[name]['file_splitted_name'])
+        # trace les subplots de force 
+        myplt.plot_f_vs_t_subplots(bd[name]['time'],bd[name]['force'],bd[name]['boundaries'],bd[name]['file_splitted_name'])
+        # trace la contrainte en fonction du temps 
+        myplt.plot_s_vs_t(bd[name]['time'],bd[name]['stress'],bd[name]['boundaries'],bd[name]['file_splitted_name'])
+        # trace la contrainte en fonction de la position 
+        myplt.plot_s_vs_p(bd[name]['position'],bd[name]['stress'],bd[name]['boundaries'],bd[name]['file_splitted_name'])
