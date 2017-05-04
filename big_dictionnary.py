@@ -15,6 +15,7 @@ import plot_functions as myplt
 import get_functions as gt
 import matplotlib.image as mpimg
 import os
+from scipy.optimize import curve_fit
 import glob
 
 os.listdir('.')
@@ -25,6 +26,7 @@ fichier_yml = open(glob.glob('*.yml')[0], 'r')
 variables = yaml.load(fichier_yml)
 bd = {}
 	
+# remplit le dictionnaire bd avec toutes les infos qu'on peut trouver sur les fichiers présents dans le même dossier que ce .py
 
 for filename in glob.glob('*.txt'):
 
@@ -55,7 +57,6 @@ for filename in glob.glob('*.txt'):
 	force -= zero_load
 
 	# Calcul du stress
-
 	stress = gt.get_stress(boundaries, force, position, variables)
 
 
@@ -80,59 +81,59 @@ for filename in glob.glob('*.txt'):
 	}
 	)
 
-#print(len(bd)) # donne la longueur du dictionnaire (et donc le nombre de fichiers)
-#print(bd.keys()) # donne les clés du dictionnaire (et donc les noms de fichiers sans le .txt)
 
 
-def plot_for_each_file(bd):
+# def func(x, a, b, c, d, f):
+#     return a*np.exp(-b*x) + c*np.exp(-d*x) + f
 
-	"""
-    Save plots involving only one file each
-    
-    Parameters
-    ----------
-    bd : dictionnary
-        Dictionnary containing informations about all *.txt files in the folder.
-    
-    Returns
-    -------
-    Nothing, but saves png
-    
-    """
+# x = bd['Lam1_V10_001']['force'][bd['Lam1_V10_001']['boundaries']['penetration_to_relaxation']:bd['Lam1_V10_001']['boundaries']['relaxation_to_elastic']]
+# y = bd['Lam1_V10_001']['time'][bd['Lam1_V10_001']['boundaries']['penetration_to_relaxation']:
+# bd['Lam1_V10_001']['boundaries']['relaxation_to_elastic']] - bd['Lam1_V10_001']['time'][bd['Lam1_V10_001']['boundaries']['penetration_to_relaxation']]
 
-	for name in bd.keys():
-		# vérification
-		myplt.plot_boundaries(bd[name]['time'],bd[name]['force'],bd[name]['boundaries'],bd[name]['file_splitted_name'])
-		# la force en fonction de la position 
-		myplt.plot_diff_regions_f_vs_p(bd[name]['position'],bd[name]['force'],bd[name]['boundaries'],bd[name]['file_splitted_name'])
-		# trace les subplots de force 
-		myplt.plot_f_vs_t_subplots(bd[name]['time'],bd[name]['force'],bd[name]['boundaries'],bd[name]['file_splitted_name'])
-		# trace la contrainte en fonction du temps 
-		myplt.plot_s_vs_t(bd[name]['time'],bd[name]['stress'],bd[name]['boundaries'],bd[name]['file_splitted_name'])
-		# trace la contrainte en fonction de la position 
-		myplt.plot_s_vs_p(bd[name]['position'],bd[name]['stress'],bd[name]['boundaries'],bd[name]['file_splitted_name'])
+# popt, pcov = curve_fit(func, x, y)
+# print(popt)
+
+# plt.plot(x,y, marker='o', linestyle='')
+# plt.plot(x, func(x, *popt), '-', label = 'fit_dbl_exp')
+# plt.legend()
+# plt.savefig('fit_double_exponentielle.png')
 
 
+def func(x, a, b, c):
+    return a*np.exp(-b*x) + c
 
-#penetration_slope = []
-#speed_in_files = []
+# x0 = np.array([50000 , 3, 300])
 
-#for name in bd.keys():
-#	penetration_slope += [bd[name]['fit_penetration'][0]]
-#	speed_in_files += [bd[name]['speed']]
+# x = np.asarray(bd['Lam1_V10_001']['force'][bd['Lam1_V10_001']['boundaries']['penetration_to_relaxation']:bd['Lam1_V10_001']['boundaries']['relaxation_to_elastic']-11])
+# y = np.asarray(bd['Lam1_V10_001']['time'][bd['Lam1_V10_001']['boundaries']['penetration_to_relaxation']:
+# bd['Lam1_V10_001']['boundaries']['relaxation_to_elastic']-11] - bd['Lam1_V10_001']['time'][bd['Lam1_V10_001']['boundaries']['penetration_to_relaxation']])
 
-#	plt.plot(speed_in_files, penetration_slope, marker='o', linestyle='', ms ='4', label=bd[name]['file_splitted_name'][0])
-#	plt.legend()
-#plt.xlabel('Speed (mm/ms)')
-#plt.ylabel('Slope_penetration (mN/ms)')
-#plt.title('Slope_penetration_vs_speed' + Lam + '.png')
-#plt.savefig('Slope_penetration_vs_speed_' + Lam + '.png')
-#plt.close()
+# popt, pcov = curve_fit(func, x, y, x0)
+# print(popt)
 
-### Tracer le stress moyen pendant la pénétration pour toutes les vitesses d'une même lame 
+# plt.plot(x,y, marker='o', linestyle='')
+# plt.plot(x, func(x, *popt), '-', label = 'fit_dbl_exp')
+# plt.legend()
+# plt.savefig('fit_double_exponentielle_debut.png')
+
+x0 = np.array([1, 1, 1 ])
 
 
-plot_for_each_file(bd)
+x = np.asarray(bd['Lam1_V10_001']['force'][(bd['Lam1_V10_001']['boundaries']['relaxation_to_elastic']-11):bd['Lam1_V10_001']['boundaries']['relaxation_to_elastic']])
+y = np.asarray(bd['Lam1_V10_001']['time'][(bd['Lam1_V10_001']['boundaries']['relaxation_to_elastic']-11):
+bd['Lam1_V10_001']['boundaries']['relaxation_to_elastic']] - bd['Lam1_V10_001']['time'][bd['Lam1_V10_001']['boundaries']['penetration_to_relaxation']])
+
+plt.plot(x,y, marker='o', linestyle='')
+plt.show()
+
+# popt, pcov = curve_fit(func, x, y, x0)
+# print(popt)
+
+# plt.plot(x,y, marker='o', linestyle='')
+# plt.plot(x, func(x, *popt), '-', label = 'fit_dbl_exp')
+# plt.legend()
+# plt.savefig('fit_double_exponentielle_fin.png')
+
 		
 
 
