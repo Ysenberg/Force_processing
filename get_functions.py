@@ -128,11 +128,18 @@ def get_stress(boundaries, force, position, variables):
     array
     
     """
-    stress = [0]*(boundaries['contact_to_penetration'])
-    stress.extend(force[boundaries['contact_to_penetration']:boundaries['fluidized_to_meniscus']])
-    stress.extend([0]*(len(position) - boundaries['fluidized_to_meniscus']))
     penetrated_area = get_penetrated_area(position, boundaries, variables)
-    stress[boundaries['contact_to_penetration']:boundaries['fluidized_to_meniscus']] /= penetrated_area[boundaries['contact_to_penetration']:boundaries['fluidized_to_meniscus']]
+    arg_first_nonzero_area = penetrated_area.nonzero()[0][0]
+    inv_area = penetrated_area[::-1]
+    arg_last_nonzero_area = inv_area.nonzero()[0][0]
+
+
+
+    stress = [0]*(arg_first_nonzero_area)
+    stress.extend(force[arg_first_nonzero_area:arg_last_nonzero_area])
+    stress.extend([0]*(len(position) - arg_last_nonzero_area))
+    
+    stress[arg_first_nonzero_area:arg_last_nonzero_area] /= penetrated_area[arg_first_nonzero_area:arg_last_nonzero_area]
     return stress
 
 

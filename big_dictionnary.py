@@ -126,7 +126,8 @@ x0 = np.array([1, 1, 1 ])
 
 x = np.asarray(bd['Lam1_V10_001']['force'][(bd['Lam1_V10_001']['boundaries']['relaxation_to_elastic']-11):bd['Lam1_V10_001']['boundaries']['relaxation_to_elastic']])
 y = np.asarray(bd['Lam1_V10_001']['time'][(bd['Lam1_V10_001']['boundaries']['relaxation_to_elastic']-11):
-bd['Lam1_V10_001']['boundaries']['relaxation_to_elastic']] - bd['Lam1_V10_001']['time'][bd['Lam1_V10_001']['boundaries']['penetration_to_relaxation']])
+bd['Lam1_V10_001']['boundaries']['relaxation_to_elastic']] - bd['Lam1_V10_001']['time'](bd['Lam1_V10_001']['boundaries']['relaxation_to_elastic']-11)
+
 
 plt.plot(x,y, marker='o', linestyle='')
 plt.show()
