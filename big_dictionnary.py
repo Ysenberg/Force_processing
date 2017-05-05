@@ -21,11 +21,16 @@ import glob
 os.listdir('.')
 
 
-# D'abord le fichier yml qui passe dans le coin. Attention, ici si il y en a deux on est mal
-fichier_yml = open(glob.glob('*.yml')[0], 'r')
-variables = yaml.load(fichier_yml)
+# Read the configuration file.
+yaml_files = glob.glob('*.yml')
+try:
+    assert(len(yaml_files) == 1)
+except AssertionError:
+    raise RuntimeError('Only one yaml file must be present in the current directory.')
+
+variables = yaml.load(open(yaml_files[0], 'r'))
 bd = {}
-	
+
 # remplit le dictionnaire bd avec toutes les infos qu'on peut trouver sur les fichiers présents dans le même dossier que ce .py
 
 for filename in glob.glob('*.txt'):
@@ -44,13 +49,13 @@ for filename in glob.glob('*.txt'):
 
 	#Trouver la vitesse associée au fichier
 	speed = int(re.findall(r'\d+', V)[0])
-	#Trouver la lame associée au fichier 
+	#Trouver la lame associée au fichier
 	plate = int(re.findall(r'\d+', Lam)[0])
 
 
 	boundaries = gt.get_boundaries(time, position, force, variables)
 
-	# Mettre la force à zéro au début 
+	# Mettre la force à zéro au début
 	dist_init = variables['dist_plate_to_foam']
 	number_first_points = (int(float(((len(np.nonzero((position - dist_init)<0)[0]))/2))))
 	zero_load = force[:number_first_points].mean()
@@ -62,7 +67,7 @@ for filename in glob.glob('*.txt'):
 
 
 
-	# Le fit de la partie pénétration ! 
+	# Le fit de la partie pénétration !
 	x = time[boundaries['contact_to_penetration']:boundaries['penetration_to_relaxation']]
 	y = position[boundaries['contact_to_penetration']:boundaries['penetration_to_relaxation']]
 	fit_penetration = np.polyfit(x,y,1) # cette fonction met les paramètres du fit par ordre d'exposant décroissant (la pente est dont fit[0])
@@ -72,10 +77,10 @@ for filename in glob.glob('*.txt'):
 	'position': position, # ----------------------------------- array
 	'force' : force, # ---------------------------------------- array
 	'boundaries' : boundaries, # ------------------------------ dictionnary
-	'stress' : stress, # -------------------------------------- array 
+	'stress' : stress, # -------------------------------------- array
 	'file_splitted_name' : file_splitted_name, # -------------- list of strings
 	'fit_penetration' : fit_penetration, # -------------------- list of floats
-	'speed' : speed, # ---------------------------------------- int 
+	'speed' : speed, # ---------------------------------------- int
 	'plate' : plate # ----------------------------------------- int
 	}
 	}
@@ -134,10 +139,10 @@ plt.show()
 # plt.legend()
 # plt.savefig('fit_double_exponentielle_fin.png')
 
-		
 
 
-	
+
+
 
 
 
