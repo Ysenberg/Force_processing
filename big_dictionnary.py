@@ -104,8 +104,8 @@ for filename in glob.glob('*.txt'):
 # plt.savefig('fit_double_exponentielle.png')
 
 
-def func(x, a, b, c):
-    return a*np.exp(-b*x) + c
+# def func(x, a, b, c):
+#     return a*np.exp(-b*x) + c
 
 # x0 = np.array([50000 , 3, 300])
 
@@ -121,16 +121,16 @@ def func(x, a, b, c):
 # plt.legend()
 # plt.savefig('fit_double_exponentielle_debut.png')
 
-x0 = np.array([1, 1, 1 ])
+# x0 = np.array([1, 1, 1 ])
 
 
-x = np.asarray(bd['Lam1_V10_001']['force'][(bd['Lam1_V10_001']['boundaries']['relaxation_to_elastic']-11):bd['Lam1_V10_001']['boundaries']['relaxation_to_elastic']])
-y = np.asarray(bd['Lam1_V10_001']['time'][(bd['Lam1_V10_001']['boundaries']['relaxation_to_elastic']-11):
-bd['Lam1_V10_001']['boundaries']['relaxation_to_elastic']] - bd['Lam1_V10_001']['time'](bd['Lam1_V10_001']['boundaries']['relaxation_to_elastic']-11)
+# x = np.asarray(bd['Lam1_V10_001']['force'][(bd['Lam1_V10_001']['boundaries']['relaxation_to_elastic']-11):bd['Lam1_V10_001']['boundaries']['relaxation_to_elastic']])
+# y = np.asarray(bd['Lam1_V10_001']['time'][(bd['Lam1_V10_001']['boundaries']['relaxation_to_elastic']-11):
+# bd['Lam1_V10_001']['boundaries']['relaxation_to_elastic']] - bd['Lam1_V10_001']['time'](bd['Lam1_V10_001']['boundaries']['relaxation_to_elastic']-11)
 
 
-plt.plot(x,y, marker='o', linestyle='')
-plt.show()
+# plt.plot(x,y, marker='o', linestyle='')
+# plt.show()
 
 # popt, pcov = curve_fit(func, x, y, x0)
 # print(popt)
@@ -143,7 +143,7 @@ plt.show()
 
 
 
-
+myplt.plot_for_each_file(bd)
 
 
 

@@ -33,7 +33,7 @@ def get_boundaries(time, position, force, variables):
     # Approach to contact
     # Calculate the zero load based on the first points
     # and quantify how much we deviate from that.
-    threshold_force_in = np.std(force[:number_first_points])
+    threshold_force_in = np.std(force[:number_last_points])
     zero_load = force[:number_first_points].mean()
     far_from_threshold = np.abs((force - zero_load) / force) > threshold_force_in
     arg_approach_to_contact = far_from_threshold.nonzero()[0][0]
