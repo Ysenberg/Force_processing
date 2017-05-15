@@ -1,7 +1,7 @@
 # Infos sur la manip du 24-04-2017
 ---
   R_bubbles: 0.7 #------------------------------------------------------ Rayon des bulles en mm
-  Phi: 0.000013 #------------------------------------------------------- Fract° liq au milieu de la partie immergée de la lame
+  Phi: 0.0006_0.002 #------------------------------------------------------- Fract° liq au milieu de la partie immergée de la lame
   foam_height: 80 #----------------------------------------------------- Hauteur de mousse en mm
   plate_width: 36 #----------------------------------------------------- Largeur de la lame en mm
   plate_length: 40 #---------------------------------------------------- Longueur de la lame en mm
