@@ -58,7 +58,7 @@ def plot_diff_regions_f_vs_t(time,force,boundaries,file_splitted_name):
     plt.plot(time[boundaries['meniscus_to_breakage']:],
              force[boundaries['meniscus_to_breakage']:], 
              'purple', marker='o', linestyle='', ms='3')
-    plt.xlabel('Time (ms)')
+    plt.xlabel('Time (s)')
     plt.ylabel('Force (mN)')
     plt.title(''.join(['Force_vs_tps_', file_splitted_name[0] , '_', file_splitted_name[1] ,'_',file_splitted_name[2]]))
     name = ''.join(['Force_vs_tps_', file_splitted_name[0] , '_', file_splitted_name[1] ,'_',file_splitted_name[2],'.png'])
@@ -235,8 +235,8 @@ def plot_s_vs_t(time,stress,boundaries,file_splitted_name):
              stress[boundaries['elastic_to_fluidized']:boundaries['fluidized_to_meniscus']], 
              'cornflowerblue', marker='o', linestyle='')
 
-    ax[0].set_xlabel('Time (ms)')
-    ax[0].set_ylabel('Stress (mN/mm²)')
+    ax[0].set_xlabel('Time (s)')
+    ax[0].set_ylabel('Stress (kPa)')
     ax[0].set_title(''.join(['Stress_vs_Time_', file_splitted_name[0] , '_', file_splitted_name[1] ,'_',file_splitted_name[2]]))
 
     #ax[1].plot(time[boundaries['approach_to_contact']:boundaries['contact_to_penetration']],
@@ -255,8 +255,8 @@ def plot_s_vs_t(time,stress,boundaries,file_splitted_name):
              stress[boundaries['penetration_to_relaxation']:boundaries['relaxation_to_elastic']], 
              'palegreen', marker='o', linestyle='')
 
-    ax[1].set_xlabel('Time (ms)')
-    ax[1].set_ylabel('Stress (mN/mm²)')
+    ax[1].set_xlabel('Time (s)')
+    ax[1].set_ylabel('Stress (kPa)')
     ax[1].set_title(''.join(['Stress_vs_Time_', file_splitted_name[0] , '_', file_splitted_name[1] ,'_',file_splitted_name[2]]))
 
 
@@ -268,8 +268,8 @@ def plot_s_vs_t(time,stress,boundaries,file_splitted_name):
              stress[boundaries['elastic_to_fluidized']:boundaries['fluidized_to_meniscus']], 
              'cornflowerblue', marker='o', linestyle='')
 
-    ax[2].set_xlabel('Time (ms)')
-    ax[2].set_ylabel('Stress (mN/mm²)')
+    ax[2].set_xlabel('Time (s)')
+    ax[2].set_ylabel('Stress (kPa)')
     ax[2].set_title(''.join(['Stress_vs_Time_', file_splitted_name[0] , '_', file_splitted_name[1] ,'_',file_splitted_name[2]]))
 
     plt.title(''.join(['Stress_vs_Time_', file_splitted_name[0] , '_', file_splitted_name[1] ,'_',file_splitted_name[2]]))
@@ -306,7 +306,7 @@ def plot_boundaries(time,force,boundaries,file_splitted_name):
     plt.plot(time[boundaries['elastic_to_fluidized']], force[boundaries['elastic_to_fluidized']], 'ro')
     plt.plot(time[boundaries['fluidized_to_meniscus']], force[boundaries['fluidized_to_meniscus']], 'ro')
     plt.plot(time[boundaries['meniscus_to_breakage']], force[boundaries['meniscus_to_breakage']], 'ro')
-    plt.xlabel('Time (ms)')
+    plt.xlabel('Time (s)')
     plt.ylabel('Force (mN)')
     plt.minorticks_on()
     plt.title(''.join(['Force_vs_tps_boundaries_', file_splitted_name[0] , '_', file_splitted_name[1] ,'_',file_splitted_name[2]]))
@@ -362,7 +362,7 @@ def plot_s_vs_p(position,stress,boundaries,file_splitted_name):
              'cornflowerblue', marker='o', linestyle='')
 
     ax[0].set_xlabel('Position (mm)')
-    ax[0].set_ylabel('Stress (mN/mm²)')
+    ax[0].set_ylabel('Stress (kPa)')
     ax[0].set_title(''.join(['Stress_vs_Position_', file_splitted_name[0] , '_', file_splitted_name[1] ,'_',file_splitted_name[2]]))
 
     #ax[1].plot(position[boundaries['approach_to_contact']:boundaries['contact_to_penetration']],
@@ -382,7 +382,7 @@ def plot_s_vs_p(position,stress,boundaries,file_splitted_name):
              'palegreen', marker='o', linestyle='')
 
     ax[1].set_xlabel('Position (mm)')
-    ax[1].set_ylabel('Stress (mN/mm²)')
+    ax[1].set_ylabel('Stress (kPa)')
     ax[1].set_title(''.join(['Stress_vs_Position_', file_splitted_name[0] , '_', file_splitted_name[1] ,'_',file_splitted_name[2]]))
 
 
@@ -395,7 +395,7 @@ def plot_s_vs_p(position,stress,boundaries,file_splitted_name):
              'cornflowerblue', marker='o', linestyle='')
 
     ax[2].set_xlabel('Position (mm)')
-    ax[2].set_ylabel('Stress (mN/mm²)')
+    ax[2].set_ylabel('Stress (kPa)')
     ax[2].set_title(''.join(['Stress_vs_Time_', file_splitted_name[0] , '_', file_splitted_name[1] ,'_',file_splitted_name[2]]))
     plt.minorticks_on()
     plt.title(''.join(['Stress_vs_Position_', file_splitted_name[0] , '_', file_splitted_name[1] ,'_',file_splitted_name[2]]))
@@ -459,6 +459,8 @@ def plot_mean_stress_vs_speed(bd):
         plt.errorbar(speed,mean_stress, yerr=std_stress, fmt='o', ms = 4)
         plt.legend()
 
+    plt.xlabel('Time (s)')
+    plt.ylabel('Mean stress (kPa)')
     plt.title('Mean_stress_while_penetration_vs_speed_' )
     plt.savefig('Mean_stress_while_penetration_vs_speed_' + '.png')
     plt.close()
@@ -486,7 +488,7 @@ def plot_all_velocities(bd):
         for name in names_by_plate[lame]:
             plt.plot(bd[name]['time'],bd[name]['force'], marker='o', linestyle='-', ms ='2', label=bd[name]['file_splitted_name'][1])
             plt.legend()
-        plt.xlabel('Time (ms)')
+        plt.xlabel('Time (s)')
         plt.ylabel('Force (mN)')
         plt.minorticks_on()
         plt.title('Force_vs_Time' + bd[name]['file_splitted_name'][0])
@@ -503,26 +505,26 @@ def plot_all_velocities(bd):
         name_file = ''.join(['Position_vs_force_varV_', bd[name]['file_splitted_name'][0], '.png'])
         plt.savefig(name_file, bbox_inches='tight')
         plt.close()
-        for name in names_by_plate[lame]:
-            plt.plot(bd[name]['time'],bd[name]['stress'], marker='o', linestyle='-', ms ='2', label=bd[name]['file_splitted_name'][1])
-            plt.legend()
-        plt.xlabel('Time (ms)')
-        plt.ylabel('Stress (mN/mm²)')
-        plt.minorticks_on()
-        plt.title('Stress_vs_time' + bd[name]['file_splitted_name'][0])
-        name_file = ''.join(['Stress_vs_time_varV', bd[name]['file_splitted_name'][0], '.png'])
-        plt.savefig(name_file, bbox_inches='tight')
-        plt.close()
-        for name in names_by_plate[lame]:
-            plt.plot(bd[name]['position'],bd[name]['stress'], marker='o', linestyle='-', ms ='2', label=bd[name]['file_splitted_name'][1])
-            plt.legend()
-        plt.xlabel('Position (mm)')
-        plt.ylabel('Stress (mN/mm²)')
-        plt.minorticks_on()
-        plt.title('Stress_vs_position' + bd[name]['file_splitted_name'][0])
-        name_file = ''.join(['Stress_vs_position_varV', bd[name]['file_splitted_name'][0], '.png'])
-        plt.savefig(name_file, bbox_inches='tight')
-        plt.close()
+        # for name in names_by_plate[lame]:
+        #     plt.plot(bd[name]['time'],bd[name]['stress'], marker='o', linestyle='-', ms ='2', label=bd[name]['file_splitted_name'][1])
+        #     plt.legend()
+        # plt.xlabel('Time (s)')
+        # plt.ylabel('Stress (kPa)')
+        # plt.minorticks_on()
+        # plt.title('Stress_vs_time' + bd[name]['file_splitted_name'][0])
+        # name_file = ''.join(['Stress_vs_time_varV', bd[name]['file_splitted_name'][0], '.png'])
+        # plt.savefig(name_file, bbox_inches='tight')
+        # plt.close()
+        # for name in names_by_plate[lame]:
+        #     plt.plot(bd[name]['position'],bd[name]['stress'], marker='o', linestyle='-', ms ='2', label=bd[name]['file_splitted_name'][1])
+        #     plt.legend()
+        # plt.xlabel('Position (mm)')
+        # plt.ylabel('Stress (kPa)')
+        # plt.minorticks_on()
+        # plt.title('Stress_vs_position' + bd[name]['file_splitted_name'][0])
+        # name_file = ''.join(['Stress_vs_position_varV', bd[name]['file_splitted_name'][0], '.png'])
+        # plt.savefig(name_file, bbox_inches='tight')
+        # plt.close()
 
 
 def plot_for_each_file(bd):

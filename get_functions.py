@@ -5,6 +5,10 @@ from scipy import constants
 import matplotlib.colors as colors
 import matplotlib.pyplot as plt
 from itertools import compress
+import glob
+import yaml
+import re
+import os
 
 def get_boundaries(time, position, force, variables):
     """
@@ -37,6 +41,9 @@ def get_boundaries(time, position, force, variables):
     zero_load = force[:number_first_points].mean()
     far_from_threshold = np.abs((force - zero_load) / force) > threshold_force_in
     arg_approach_to_contact = far_from_threshold.nonzero()[0][0]
+
+    # Max of force
+    arg_force_max = force.argmax()
     
     
     # # Contact to penetration
@@ -80,6 +87,7 @@ def get_boundaries(time, position, force, variables):
             'elastic_to_fluidized' :  arg_elastic_to_fluidized,
             'fluidized_to_meniscus' : arg_fluidized_to_meniscus,
             'meniscus_to_breakage' : arg_meniscus_to_breakage,
+            'arg_force_max' : arg_force_max
            }
 
 
@@ -96,8 +104,8 @@ def get_penetrated_area(position, boundaries, variables):
         Array of plate positions.
     boundaries : dictionnary
         Dictionnary containing limits btw regimes
-    width : float
-        Plate width.
+    varaibles : dictionnary
+        Informations from the yaml file.
     
     Returns
     -------
@@ -131,7 +139,7 @@ def get_stress(boundaries, force, position, variables):
     penetrated_area = get_penetrated_area(position, boundaries, variables)
     arg_first_nonzero_area = penetrated_area.nonzero()[0][0]
     inv_area = penetrated_area[::-1]
-    arg_last_nonzero_area = inv_area.nonzero()[0][0]
+    arg_last_nonzero_area = len(penetrated_area) - inv_area.nonzero()[0][0] - 1
 
 
 
@@ -140,6 +148,7 @@ def get_stress(boundaries, force, position, variables):
     stress.extend([0]*(len(position) - arg_last_nonzero_area))
     
     stress[arg_first_nonzero_area:arg_last_nonzero_area] /= penetrated_area[arg_first_nonzero_area:arg_last_nonzero_area]
+
     return stress
 
 
@@ -206,4 +215,103 @@ def get_names_files_same_speed(bd):
             })
 
     return dict_names_speed
+
+
+def big_dictionnary():
+    """
+    Returns one dictionnary containing informations about files in the current folder
+    
+    Parameters
+    ----------
+    
+    Returns
+    -------
+    bd : dictionnary
+        Dictionnary containing : 
+            - time : array 
+                Contains the first column of data files
+            - position : array
+                Contains the second column of data files
+            - force : array
+                Contains the third column of data files
+            - boundaries : array
+                Values of the delimitaions between regions 
+            - stress : array
+                Contains the force divided by the immerged area of the plate
+            - file_splitted_name : list of strings
+                Contains strings from the file name
+            - fit penetration : 
+                Contains parameters (decreasing exponent) of a linear fit of the penetration regime
+            - speed : float
+                Speed of the plate, extracted from the file name
+            - plate : int
+                Contains the int corresponding to the studied roughness, extracted from the file name 
+    
+    """
+
+    bd = {}
+    yaml_files = glob.glob('*.yml')
+    try:
+        assert(len(yaml_files) == 1)
+    except AssertionError:
+        raise RuntimeError('Only one yaml file must be present in the current directory.')
+
+    variables = yaml.load(open(yaml_files[0], 'r'))
+
+    for filename in glob.glob('*.txt'):
+
+        file_splitted_name = os.path.splitext(filename)[0].split('_') # Les fichiers seront nommés Lam*_V*_00*.txt
+        Lam = file_splitted_name[0]
+        V = file_splitted_name[1]
+        Nb = file_splitted_name[2]
+        print(filename) #juste pour voir si tout va bien. A retirer ensuite
+        data = np.loadtxt(filename, unpack=True) # charge les données du fichier de la boucle en cours
+        time = data[0]
+        time /= 1000
+        position = data[1]
+        force = data[2]
+
+
+
+        #Trouver la vitesse associée au fichier
+        speed = int(re.findall(r'\d+', V)[0])
+        #Trouver la lame associée au fichier
+        plate = int(re.findall(r'\d+', Lam)[0])
+
+
+        boundaries = get_boundaries(time, position, force, variables)
+
+        # Mettre la force à zéro au début
+        dist_init = variables['dist_plate_to_foam']
+        number_first_points = (int(float(((len(np.nonzero((position - dist_init)<0)[0]))/2))))
+        zero_load = force[:number_first_points].mean()
+        force -= zero_load
+
+        # Calcul du stress
+        stress = get_stress(boundaries, force, position, variables)
+
+
+
+
+
+        # Le fit de la partie pénétration !
+        x = time[boundaries['contact_to_penetration']:boundaries['arg_force_max']] # temps en secondes
+        y = position[boundaries['contact_to_penetration']:boundaries['arg_force_max']] # position en m
+        fit_penetration = np.polyfit(x,y,1) # cette fonction met les paramètres du fit par ordre d'exposant décroissant (la pente est dont fit[0])
+
+        bd.update({ '_'.join([Lam, V, Nb]) :
+        {'time' : time, # ----------------------------------------- array
+        'position': position, # ----------------------------------- array
+        'force' : force, # ---------------------------------------- array
+        'boundaries' : boundaries, # ------------------------------ dictionnary
+        'stress' : stress, # -------------------------------------- array
+        'file_splitted_name' : file_splitted_name, # -------------- list of strings
+        'fit_penetration' : fit_penetration, # -------------------- list of floats
+        'speed' : speed, # ---------------------------------------- int
+        'plate' : plate # ----------------------------------------- int
+        }
+        }
+        )
+
+    return bd
 
