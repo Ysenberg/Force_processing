@@ -2,6 +2,7 @@ import numpy as np
 from scipy.optimize import lsq_linear
 from scipy.interpolate import interp1d
 from scipy import constants
+import scipy as sp
 import matplotlib.colors as colors
 import matplotlib.pyplot as plt
 from itertools import compress
@@ -296,8 +297,26 @@ def big_dictionnary():
 
         # Le fit de la partie pénétration !
         x = time[boundaries['contact_to_penetration']:boundaries['arg_force_max']] # temps en secondes
-        y = position[boundaries['contact_to_penetration']:boundaries['arg_force_max']] # position en m
-        fit_penetration = np.polyfit(x,y,1) # cette fonction met les paramètres du fit par ordre d'exposant décroissant (la pente est dont fit[0])
+        y = position[boundaries['contact_to_penetration']:boundaries['arg_force_max']] # position en mm
+        fit_penetration = sp.stats.linregress(x, y) # cette fonction met les paramètres du fit par ordre d'exposant décroissant (la pente est donc fit[0])
+      
+        # Le fit de la partie fluidized !
+        z = time[boundaries['elastic_to_fluidized']:boundaries['fluidized_to_meniscus']] # temps en secondes
+        w = position[boundaries['elastic_to_fluidized']:boundaries['fluidized_to_meniscus']] # position en mm
+        fit_meniscus = sp.stats.linregress(z, w) # cette fonction met les paramètres du fit par ordre d'exposant décroissant (la pente est donc fit[0])
+        """ Renvoie un tuple avec 5 valeurs : 
+         - la pente 
+         - l'ordonnée à l'origine 
+         - le coefficient de corrélation
+         - la p-value
+         - l'erreur standard de l'estimation
+        """
+
+        # Retourne delta, la distance parcourue dans la mousse entre la fin de la relaxation et le min de force. 
+        delta = abs(position[boundaries['elastic_to_fluidized']] - position[boundaries['relaxation_to_elastic']])
+
+
+
 
         bd.update({ '_'.join([Lam, V, Nb]) :
         {'time' : time, # ----------------------------------------- array
@@ -307,8 +326,11 @@ def big_dictionnary():
         'stress' : stress, # -------------------------------------- array
         'file_splitted_name' : file_splitted_name, # -------------- list of strings
         'fit_penetration' : fit_penetration, # -------------------- list of floats
+        'fit_meniscus' : fit_meniscus, # -------------------------- list of floats
         'speed' : speed, # ---------------------------------------- int
-        'plate' : plate # ----------------------------------------- int
+        'plate' : plate, # ---------------------------------------- int
+        'delta' : delta # ----------------------------------------- float
+
         }
         }
         )
