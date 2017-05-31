@@ -24,8 +24,12 @@ import glob
 import seaborn as sns
 
 sns.set_style("ticks", {"xtick.direction" : u"in", "ytick.direction" : u"in"})
+sns.set_context("paper")
 
+sns.set_palette(['forestgreen', 'LightSeaGreen',  'DeepSkyBlue', 'MediumSlateBlue', 'MidnightBlue', 'RosyBrown', 'Brown', 'Chocolate', 'goldenrod', 'olive', 'yellowgreen', 'gold', 'darkorange', 'orangered', 'crimson'])
 os.listdir('.')
+
+#current_palette = sns.color_palette()
 
 
 # Read the configuration file.
@@ -40,18 +44,26 @@ variables = yaml.load(open(yaml_files[0], 'r'))
 
 bd = gt.big_dictionnary()
 
+# myplt.plot_mean_stress_vs_speed_all_files(bd)
+# myplt.plot_mean_stress_vs_speed_by_plate(bd)
+# myplt.plot_all_velocities(bd)
+# myplt.plot_for_each_file(bd)
+# myplt.ratio_btw_slopes_all_plates(bd)
+# myplt.ratio_by_plate(bd)
+myplt.log_plot_relaxation(bd)
 
-name = 'Lam3_V12_001'
 
-plt.plot(bd[name]['time'], bd[name]['force'], label='force')
+# name = 'Lam3_V12_001'
 
-area = gt.get_penetrated_area(bd[name]['position'], bd[name]['boundaries'], variables)
-area /= 700
+# plt.plot(bd[name]['time'], bd[name]['force'], label='force')
 
-plt.plot(bd[name]['time'], area, label='area')
-plt.legend()
-plt.xlabel('Time (s)')
-plt.ylabel('Force et aire (sans dimension)')
-plt.savefig('truc.png')
+# area = gt.get_penetrated_area(bd[name]['position'], bd[name]['boundaries'], variables)
+# area /= 700
+
+# plt.plot(bd[name]['time'], area, label='area')
+# plt.legend()
+# plt.xlabel('Time (s)')
+# plt.ylabel('Force (mN) et aire (sans dimension)')
+# plt.savefig('truc.png')
 
 
