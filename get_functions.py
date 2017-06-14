@@ -10,6 +10,21 @@ import glob
 import yaml
 import re
 import os
+from scipy.signal import savgol_filter
+from yaml import load, dump
+import pandas as pd
+import plot_functions as myplt
+import matplotlib.image as mpimg
+from scipy.optimize import curve_fit
+import scipy.optimize as spopt
+import glob
+import seaborn as sns
+import lineregress as myregress
+import pylab as pl
+from matplotlib import rc
+
+plt.rc('text', usetex=True)
+plt.rc('font',**{'family':'sans-serif','sans-serif':['Helvetica']})
 
 def get_boundaries(time, position, force, variables):
     """
@@ -247,6 +262,8 @@ def big_dictionnary():
                 Speed of the plate, extracted from the file name
             - plate : int
                 Contains the int corresponding to the studied roughness, extracted from the file name 
+            - delta : float
+                Distance correspondant au régime de réponse élastique
     
     """
 
@@ -290,6 +307,7 @@ def big_dictionnary():
 
         # Calcul du stress
         stress = get_stress(boundaries, force, position, variables)
+        stress = np.asarray(stress) *1000 # pour passer en pascals
 
 
 
@@ -336,4 +354,258 @@ def big_dictionnary():
         )
 
     return bd
+
+
+def get_mean_stress_penetration(bd):
+
+    """
+    Returns one dictionnary containing informations about mean stress during the penetration regime
+    
+    Parameters
+    ----------
+    bd : dictionnary
+    
+    Returns
+    -------
+    mean_stress : dictionnary
+        Contains : 
+         - speed : array
+            Speed at which the plate is moving
+         - mean_stress_penetration : array
+            Mean of stress during penetration regime
+         - std_stress_penetration : array
+            Standard deviation regarding the mean stress calculated before
+    
+    """
+
+    names_by_plate = get_names_files_same_plate(bd)
+
+    mean_stress = {}
+
+    for lame, _ in sorted(names_by_plate.items()):
+        speed = []
+        mean_stress_penetration = []
+        std_stress_penetration = []
+        for name in sorted(names_by_plate[lame]):
+            speed += [bd[name]['speed']]
+            mean_stress_penetration += [np.asarray(bd[name]['stress'][bd[name]['boundaries']['contact_to_penetration']+10:bd[name]['boundaries']['arg_force_max']]).mean()]
+            std_stress_penetration += [np.std(bd[name]['stress'][bd[name]['boundaries']['contact_to_penetration']+10:bd[name]['boundaries']['arg_force_max']])]
+
+        mean_stress.update({lame :
+            {'speed' : speed ,
+            'mean_stress_penetration' : mean_stress_penetration,
+            'std_stress_penetration' : std_stress_penetration
+            }})
+
+    return mean_stress
+
+def get_mean_stress_relaxation(bd):
+
+    """
+    Returns one dictionnary containing informations about mean stress during the penetration regime
+    
+    Parameters
+    ----------
+    bd : dictionnary
+    
+    Returns
+    -------
+    mean_stress : dictionnary
+        Contains : 
+         - speed : array
+            Speed at which the plate is moving
+         - mean_stress_penetration : array
+            Mean of stress during penetration regime
+         - std_stress_penetration : array
+            Standard deviation regarding the mean stress calculated before
+    
+    """
+
+    names_by_plate = get_names_files_same_plate(bd)
+
+    mean_stress_rel = {}
+
+
+    for lame, _ in sorted(names_by_plate.items()):
+        speed = []
+        mean_stress = []
+        std_stress = []
+        for name in sorted(names_by_plate[lame]):
+            bound1 = bd[name]['boundaries']['arg_force_max'] + 100
+            bound2 = bd[name]['boundaries']['relaxation_to_elastic']
+            speed += [int(bd[name]['speed'])]
+            mean_stress += [np.asarray(bd[name]['stress'][bound1:bound2]).mean()]
+            std_stress += [np.std(bd[name]['stress'][bound1:bound2])]
+
+        mean_stress_rel.update({lame :
+            {'speed' : speed ,
+            'mean_stress' : mean_stress,
+            'std_stress' : std_stress
+            }})
+
+    return mean_stress_rel
+
+def get_dict_plates():
+    """
+    Returns one dictionnary containing informations about roughness of the plates (beads radius in mm)
+    
+    Parameters
+    ----------
+    
+    Returns
+    -------
+    dict_plates : dictionnary 
+
+    """
+
+    dict_plates = {'0' : 0 , '1' : 0.03, '2' : 0.04, '3' : 0.08, '4' : 0.13, '5' : 0.44}
+
+    return dict_plates
+
+def full_stress_processing_penetration(bd):
+    """
+    Plots : 
+     - all mean_stress vs speed files with fitting line and error bars
+     - intersection values of the preceding plots
+     - gradient values of the plots
+    
+    Parameters
+    ----------
+    
+    Returns
+    -------
+
+    """
+
+    mean_stress = get_mean_stress_penetration(bd)
+
+    dict_plates = get_dict_plates()
+
+    names_by_plate = get_names_files_same_plate(bd)
+    lames = []
+    list_pentes = []
+    list_ord_origine = []
+    err_pente = []
+    err_origine = []
+
+    for lame, _ in sorted(names_by_plate.items()):
+
+
+        x = np.asarray(mean_stress[lame]['speed'])
+        y = np.asarray(mean_stress[lame]['mean_stress_penetration'])
+        y_err = np.asarray(mean_stress[lame]['std_stress_penetration'])
+        pente, ord_origine, r_value, p_value , std_pente, std_origine = myregress.linregress(x, y)
+        x_fitted = [0] + mean_stress[lame]['speed']
+        truc = list(pente * x + ord_origine)
+        y_fitted = [ord_origine] + truc
+
+        list_pentes += [pente]
+        list_ord_origine += [ord_origine]
+        err_pente += [std_pente]
+        lame_number = int(re.findall(r'\d+', lame)[0])
+        lames += [dict_plates[str(lame_number)]]
+        err_origine += [std_origine]
+
+
+        plt.plot(x, y, linestyle='', marker='o', ms = 4)
+        plt.errorbar(x, y, yerr=y_err, fmt='', marker='', linestyle='none', elinewidth=0.5, capthick=0.5, capsize=1, color='gray')
+        plt.plot(x_fitted, y_fitted, linestyle='-', marker='', linewidth=0.5, color = 'black')
+        plt.ylim(ymin=0)
+        plt.xlim(xmin=0)
+        plt.xlabel('V (mm/s)')
+        plt.ylabel(r'$ < \tau > (Pa)$')
+        plt.savefig('Mean_stress_while_penetration_vs_speed_' + lame + '.pdf')
+        plt.close()
+
+    plt.plot(lames, list_pentes, linestyle='', marker='o', ms = 4)
+    plt.errorbar(lames, list_pentes, yerr=err_pente, fmt='', marker='', linestyle='none', elinewidth=0.5, capthick=0.5, capsize=1, color='gray')
+    plt.xlabel('a (mm)')
+    plt.ylabel('k (Pa.s/mm)')
+    plt.xscale("log")
+    plt.yscale("log")
+    plt.savefig('Pente_contrainte_moyenne' + '.pdf')
+    plt.close()
+
+    err_origine = np.asarray(err_origine) / 2
+
+    plt.plot(lames, list_ord_origine, linestyle='', marker='o', ms = 4)
+    plt.errorbar(lames, list_ord_origine, yerr=err_origine, fmt='', marker='', linestyle='none', elinewidth=0.5, capthick=0.5, capsize=1, color='gray')
+    plt.xlabel('a (mm)')
+    plt.ylabel(r'$\tau_0 (Pa)$')
+    plt.savefig('Origine_contrainte_moyenne' + '.pdf')
+    plt.close()
+
+def full_stress_processing_relaxation(bd):
+    """
+    Plots : 
+     - all mean_stress vs speed files with fitting line and error bars
+     - intersection values of the preceding plots
+     - gradient values of the plots
+    
+    Parameters
+    ----------
+    
+    Returns
+    -------
+
+    """
+
+    mean_stress = get_mean_stress_relaxation(bd)
+
+    dict_plates = get_dict_plates()
+
+    names_by_plate = get_names_files_same_plate(bd)
+    lames = []
+    list_pentes = []
+    list_ord_origine = []
+    err_pente = []
+    err_origine = []
+
+    for lame, _ in sorted(names_by_plate.items()):
+
+
+        x = np.asarray(mean_stress[lame]['speed'])
+        y = np.asarray(mean_stress[lame]['mean_stress'])
+        y_err = np.asarray(mean_stress[lame]['std_stress'])
+        pente, ord_origine, r_value, p_value , std_pente, std_origine = myregress.linregress(x, y)
+        x_fitted = [0] + mean_stress[lame]['speed']
+        truc = list(pente * x + ord_origine)
+        y_fitted = [ord_origine] + truc
+
+        list_pentes += [pente]
+        list_ord_origine += [ord_origine]
+        err_pente += [std_pente]
+        lame_number = int(re.findall(r'\d+', lame)[0])
+        lames += [dict_plates[str(lame_number)]]
+        err_origine += [std_origine]
+
+
+        plt.plot(x, y, linestyle='', marker='o', ms = 4)
+        plt.errorbar(x, y, yerr=y_err, fmt='', marker='', linestyle='none', elinewidth=0.5, capthick=0.5, capsize=1, color='gray')
+        plt.plot(x_fitted, y_fitted, linestyle='-', marker='', linewidth=0.5, color = 'black')
+        plt.ylim(ymin=0)
+        plt.xlim(xmin=0)
+        plt.xlabel('V (mm/s)')
+        plt.ylabel(r'$ < \tau > (Pa)$')
+        plt.savefig('Mean_stress_while_relaxation_vs_speed_' + lame + '.pdf')
+        plt.close()
+
+    plt.plot(lames, list_pentes, linestyle='', marker='o', ms = 4)
+    plt.errorbar(lames, list_pentes, yerr=err_pente, fmt='', marker='', linestyle='none', elinewidth=0.5, capthick=0.5, capsize=1, color='gray')
+    plt.xlabel('a (mm)')
+    plt.ylabel('k (Pa.s/mm)')
+    plt.xscale("log")
+    plt.yscale("log")
+    plt.savefig('Pente_contrainte_moyenne_rel' + '.pdf')
+    plt.close()
+
+    err_origine = np.asarray(err_origine) / 2
+
+    plt.plot(lames, list_ord_origine, linestyle='', marker='o', ms = 4)
+    plt.errorbar(lames, list_ord_origine, yerr=err_origine, fmt='', marker='', linestyle='none', elinewidth=0.5, capthick=0.5, capsize=1, color='gray')
+    plt.xlabel('a (mm)')
+    plt.ylabel(r'$\tau_0 (Pa)$')
+    plt.savefig('Origine_contrainte_moyenne_rel' + '.pdf')
+    plt.close()
+
 

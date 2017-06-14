@@ -11,6 +11,7 @@ from scipy import constants
 from scipy.signal import savgol_filter
 import matplotlib.colors as colors
 import matplotlib.pyplot as plt
+import matplotlib.font_manager
 import yaml
 import re
 from yaml import load, dump
@@ -20,13 +21,22 @@ import get_functions as gt
 import matplotlib.image as mpimg
 import os
 from scipy.optimize import curve_fit
+import scipy.optimize as spopt
 import glob
 import seaborn as sns
+import lineregress as myregress
+import pylab as pl
+from matplotlib import rc
 
-sns.set_style("ticks", {"xtick.direction" : u"in", "ytick.direction" : u"in"})
-sns.set_context("paper")
+plt.rc('text', usetex=True)
+plt.rc('font',**{'family':'sans-serif','sans-serif':['Helvetica']})
 
-sns.set_palette(['forestgreen', 'LightSeaGreen',  'DeepSkyBlue', 'MediumSlateBlue', 'MidnightBlue', 'RosyBrown', 'Brown', 'Chocolate', 'goldenrod', 'olive', 'yellowgreen', 'gold', 'darkorange', 'orangered', 'crimson'])
+# print(set([f.name for f in matplotlib.font_manager.fontManager.ttflist]))
+
+
+sns.set(context='paper', style ='ticks', font_scale=2.5, font = 'Symbola', rc = {"xtick.direction" : u"in", "ytick.direction" : u"in"})
+
+sns.set_palette(['forestgreen', 'LightSeaGreen',  'Aquamarine', 'MediumSlateBlue', 'MidnightBlue', 'RosyBrown', 'Brown', 'Chocolate', 'goldenrod', 'olive', 'yellowgreen', 'gold', 'darkorange', 'orangered', 'crimson'])
 os.listdir('.')
 
 #current_palette = sns.color_palette()
@@ -41,29 +51,45 @@ except AssertionError:
 
 variables = yaml.load(open(yaml_files[0], 'r'))
 
-
 bd = gt.big_dictionnary()
 
-# myplt.plot_mean_stress_vs_speed_all_files(bd)
-# myplt.plot_mean_stress_vs_speed_by_plate(bd)
-# myplt.plot_all_velocities(bd)
-# myplt.plot_for_each_file(bd)
-# myplt.ratio_btw_slopes_all_plates(bd)
-# myplt.ratio_by_plate(bd)
-myplt.log_plot_relaxation(bd)
+
+names_by_plate = gt.get_names_files_same_plate(bd)
 
 
-# name = 'Lam3_V12_001'
 
-# plt.plot(bd[name]['time'], bd[name]['force'], label='force')
+myplt.plot_relaxation_s_vs_t(bd)
 
-# area = gt.get_penetrated_area(bd[name]['position'], bd[name]['boundaries'], variables)
-# area /= 700
 
-# plt.plot(bd[name]['time'], area, label='area')
-# plt.legend()
-# plt.xlabel('Time (s)')
-# plt.ylabel('Force (mN) et aire (sans dimension)')
-# plt.savefig('truc.png')
 
+
+
+
+
+
+"""
+
+for lame, _ in sorted(names_by_plate.items()):
+	for name in sorted(names_by_plate[lame]):
+		bound1 = bd[name]['boundaries']['arg_force_max']
+		bound2 = bd[name]['boundaries']['relaxation_to_elastic']
+		time = bd[name]['time'][bound1:bound2] - bd[name]['time'][bound1]
+
+		normalisee_force = bd[name]['force'][bound1:bound2]
+		normalisee_force /= bd[name]['force'][bound1+1]
+
+		plt.plot(time, normalisee_force, label=bd[name]['file_splitted_name'][1], linestyle='', marker='o', ms = 3)
+	plt.legend(title='Vitesse (mm/s) :', prop={'fontsize':6})
+	plt.xscale("log")
+	plt.yscale("log")
+	plt.xlabel('T (s)')
+	plt.ylabel('F/Fo')
+	plt.savefig( 'Force_vs_time_during_relaxation_' + bd[name]['file_splitted_name'][0] + '.pdf')
+	plt.close()
+
+
+
+print(sorted(names_by_plate))
+
+"""
 
