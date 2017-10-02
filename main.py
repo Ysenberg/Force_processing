@@ -53,14 +53,7 @@ variables = yaml.load(open(yaml_files[0], 'r'))
 
 bd = gt.big_dictionnary()
 
-
-names_by_plate = gt.get_names_files_same_plate(bd)
-
-
-
-myplt.plot_relaxation_s_vs_t(bd)
-
-
+gt.full_stress_processing_relaxation(bd)
 
 
 
@@ -68,28 +61,37 @@ myplt.plot_relaxation_s_vs_t(bd)
 
 
 """
-
-for lame, _ in sorted(names_by_plate.items()):
-	for name in sorted(names_by_plate[lame]):
-		bound1 = bd[name]['boundaries']['arg_force_max']
-		bound2 = bd[name]['boundaries']['relaxation_to_elastic']
-		time = bd[name]['time'][bound1:bound2] - bd[name]['time'][bound1]
-
-		normalisee_force = bd[name]['force'][bound1:bound2]
-		normalisee_force /= bd[name]['force'][bound1+1]
-
-		plt.plot(time, normalisee_force, label=bd[name]['file_splitted_name'][1], linestyle='', marker='o', ms = 3)
-	plt.legend(title='Vitesse (mm/s) :', prop={'fontsize':6})
-	plt.xscale("log")
-	plt.yscale("log")
-	plt.xlabel('T (s)')
-	plt.ylabel('F/Fo')
-	plt.savefig( 'Force_vs_time_during_relaxation_' + bd[name]['file_splitted_name'][0] + '.pdf')
-	plt.close()
+----------------
+Pour faire les figures du rapport sur la partie extraction
+----------------
 
 
 
-print(sorted(names_by_plate))
+name = 'Lam2_V12_001'
+bound1 = bd[name]['boundaries']['relaxation_to_elastic']
+bound2 = bd[name]['boundaries']['elastic_to_fluidized']
+bound3 = bd[name]['boundaries']['fluidized_to_meniscus']
+bound4 = bd[name]['boundaries']['meniscus_to_breakage']
+def take_time(bound, bound2):
+	bound1 = bd[name]['boundaries']['relaxation_to_elastic']
+	return bd[name]['time'][bound:bound2] - bd[name]['time'][bound1]
 
+
+plt.plot(take_time(bound1,bound2), bd[name]['force'][bound1:bound2], linestyle='', marker='o', ms = 4, color='mediumaquamarine')
+plt.plot(take_time(bound2,bound3), bd[name]['force'][bound2:bound3], linestyle='', marker='o', ms = 4, color='cornflowerblue')
+plt.plot(take_time(bound3,bound4), bd[name]['force'][bound3:bound4], linestyle='', marker='o', ms = 4, color='mediumslateblue')
+plt.xlabel(r'$t $(s)')
+plt.ylabel(r'$ F $ (mN)')
+plt.savefig('Retire.svg')
+plt.close()
+
+
+
+plt.plot(take_time(bound1,bound2), bd[name]['stress'][bound1:bound2], linestyle='', marker='o', ms = 4, color='mediumaquamarine')
+plt.plot(take_time(bound2,bound3), bd[name]['stress'][bound2:bound3], linestyle='', marker='o', ms = 4, color='cornflowerblue')
+plt.plot(take_time(bound3,bound4), bd[name]['stress'][bound3:bound4], linestyle='', marker='o', ms = 4, color='cornflowerblue')
+plt.xlabel(r'$t $(s)')
+plt.ylabel(r'$ \tau_p $ (Pa)')
+plt.savefig('stress_retire.svg')
+plt.close()
 """
-
