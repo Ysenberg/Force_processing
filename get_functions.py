@@ -504,10 +504,10 @@ def full_stress_processing_penetration(bd):
 
 
 
-        plt.plot(x, y, linestyle='', marker='o', ms = 4) # maintenant x est Ca !!
-        plt.errorbar(x, y, yerr=y_err, fmt='', marker='', linestyle='none', elinewidth=0.5, capthick=0.5, capsize=1, color='gray')
-        plt.plot(x_fitted, y_fitted, linestyle='-', marker='', linewidth=0.5, color = 'black')
-        #plt.plot(x, funct(x), linestyle='-', marker='', ms = 4, color='black')
+        plt.plot(x, y, linestyle='', marker='o', ms = 14) # maintenant x est Ca !!
+        plt.errorbar(x, y, yerr=y_err, fmt='', marker='', linestyle='none', elinewidth=1, capthick=0.5, capsize=3, color='gray')
+        plt.plot(x_fitted, y_fitted, linestyle='-', marker='', linewidth=1, color = 'black')
+        #plt.plot(x, funct(x), linestyle='-', marker='', ms = 14, color='black')
         #plt.xlabel(r'Ca  ')
         plt.xlabel(r'$V$ (mm/s)')
         plt.ylabel(r'$ \bar{ \tau_p } $ (Pa)')
@@ -519,26 +519,38 @@ def full_stress_processing_penetration(bd):
         plt.savefig('Mean_stress_while_penetration_vs_speed_' + lame + '.svg')
         plt.close()
 
-    plt.plot(lames, list_pentes, linestyle='', marker='o', ms = 4)
-    plt.errorbar(lames, list_pentes, yerr=err_pente, fmt='', marker='', linestyle='none', elinewidth=0.5, capthick=0.5, capsize=1, color='gray')
+    plt.plot(lames, list_pentes, linestyle='', marker='o', ms = 14)
+    plt.errorbar(lames, list_pentes, yerr=err_pente, fmt='', marker='', linestyle='none', elinewidth=1, capthick=0.5, capsize=3, color='gray')
     plt.xlabel(r'$a$ (mm)')
     plt.ylabel(r'$\kappa$ (Pa.s/mm)')
     plt.ticklabel_format(style='sci', axis='both')
+    plt.xlim(xmin=0.01, xmax=0.5)
     plt.xscale("log")
     plt.yscale("log")
+    plt.tight_layout()
+    plt.savefig('Pente_contrainte_moyenne_log' + '.svg')
+    plt.close()
+
+    plt.plot(lames, list_pentes, linestyle='', marker='o', ms = 14)
+    plt.errorbar(lames, list_pentes, yerr=err_pente, fmt='', marker='', linestyle='none', elinewidth=1, capthick=0.5, capsize=3, color='gray')
+    plt.xlabel(r'$a$ (mm)')
+    plt.ylabel(r'$\kappa$ (Pa.s/mm)')
+    plt.ticklabel_format(style='sci', axis='both')
+    plt.xlim(xmin=0.01, xmax=0.25)
     plt.tight_layout()
     plt.savefig('Pente_contrainte_moyenne' + '.svg')
     plt.close()
 
-    plt.plot(lames, list_ord_origine, linestyle='', marker='o', ms = 4)
-    plt.errorbar(lames, list_ord_origine, yerr=err_origine, fmt='', marker='', linestyle='none', elinewidth=0.5, capthick=0.5, capsize=1, color='gray')
+    plt.plot(lames, list_ord_origine, linestyle='', marker='o', ms = 14)
+    plt.errorbar(lames, list_ord_origine, yerr=err_origine, fmt='', marker='', linestyle='none', elinewidth=1, capthick=0.5, capsize=3, color='gray')
+    plt.plot([0,0.22],[1.4,1.4],linestyle='--',color='black',lw=1.5)
+    plt.text(0.01,1.55,r'$\tau_c = $1.4 Pa')
     plt.ylim(ymin=0, ymax=2.5)
     plt.xlabel(r'$a$ (mm)')
     plt.ylabel(r'$\tau_0 $ (Pa)')
     plt.tight_layout()
     plt.savefig('Origine_contrainte_moyenne' + '.svg')
     plt.close()
-
 
 def full_stress_processing_relaxation(bd):
     """
@@ -592,8 +604,8 @@ def full_stress_processing_relaxation(bd):
         tau_m += [np.mean(y)]
         tau_m_now = np.mean(y)
         err_tau_m += [np.std(y)]
-        plt.plot(x, y, linestyle='', marker='o', ms = 4)
-        plt.errorbar(x, y, yerr=y_err, fmt='', marker='', linestyle='none', elinewidth=0.5, capthick=0.5, capsize=1, color='gray')
+        plt.plot(x, y, linestyle='', marker='o', ms = 14)
+        plt.errorbar(x, y, yerr=y_err, fmt='', marker='', linestyle='none', elinewidth=1, capthick=0.5, capsize=3, color='gray')
         plt.plot([0,32], [tau_m_now, tau_m_now], linestyle='--', marker='', lw=1.5, color='black')
         plt.xlim(xmin=0)
         plt.ylim(ymin=0, ymax=1.2)
@@ -602,48 +614,19 @@ def full_stress_processing_relaxation(bd):
         plt.tight_layout()
         plt.savefig('Mean_stress_while_relaxation_vs_speed_' + lame + '.svg')
         plt.close()
-"""
-    plt.plot(lames, list_pentes, linestyle='', marker='o', ms = 4)
-    plt.errorbar(lames, list_pentes, yerr=err_pente, fmt='', marker='', linestyle='none', elinewidth=0.5, capthick=0.5, capsize=1, color='gray')
-    plt.xlabel(r'$a$ (mm)')
-    plt.ylabel(r'$\kappa$ (Pa.s/mm)')
-    plt.tight_layout()
-    plt.savefig('Pente_contrainte_moyenne_rel' + '.svg')
-    plt.close()
 
-    err_origine = np.asarray(err_origine) / 4
-
-    plt.plot(lames, list_ord_origine, linestyle='', marker='o', ms = 4)
-    #plt.errorbar(lames, list_ord_origine, yerr=err_origine, fmt='', marker='', linestyle='none', elinewidth=0.5, capthick=0.5, capsize=1, color='gray')
-    plt.xlabel(r'$a$ (mm)')
-    plt.ylabel(r'$\tau_0 $ (Pa)')
-    plt.tight_layout()
-    plt.savefig('Origine_contrainte_moyenne_rel' + '.svg')
-    plt.close()
-
-    plt.plot(lames, tau_m, linestyle='', marker='o', ms = 4)
-    plt.errorbar(lames, tau_m, yerr=err_tau_m, fmt='', marker='', linestyle='none', elinewidth=0.5, capthick=0.5, capsize=1, color='gray')
+    plt.plot(lames, tau_m, linestyle='', marker='o', ms = 14)
+    plt.errorbar(lames, tau_m, yerr=err_tau_m, fmt='', marker='', linestyle='none', elinewidth=1, capthick=1, capsize=3, color='gray')
     plt.xlim(xmin=0)
-    plt.ylim(ymin=0, ymax=3.2)
+    plt.ylim(ymin=0, ymax=2.5)
     #plt.xscale("log")
     #plt.yscale("log")
     plt.xlabel(r'$a$ (mm)')
     plt.ylabel(r'$\tau_m $ (Pa)')
+    plt.plot([0,0.22],[1.4,1.4],linestyle='--',color='black',lw=1.5)
+    plt.text(0.01,1.55,r'$\tau_c = $1.4 Pa')
     plt.tight_layout()
     plt.savefig('tau_m_relaxation' + '.svg')
     plt.close()
 
     return lames, tau_m, err_tau_m
-
-    """
-
-def get_integrale_extraction(bd):
-    """
-    Parameters
-    bd : big dictionnary containing all informations about the data files
-    -------
-
-    Returns
-    -------
-
-    """

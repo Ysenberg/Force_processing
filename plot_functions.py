@@ -3,6 +3,7 @@ import numpy.fft as fft
 import scipy as sp
 from scipy.optimize import lsq_linear
 from scipy.interpolate import interp1d
+from scipy.interpolate import UnivariateSpline
 from scipy import constants
 from scipy.signal import savgol_filter
 import matplotlib.colors as colors
@@ -74,35 +75,35 @@ def plot_diff_regions_f_vs_t(time,force,boundaries,file_splitted_name):
     """
     plt.plot(time[:boundaries['approach_to_contact']],
              force[:boundaries['approach_to_contact']],
-             'sandybrown', marker='o', linestyle='', ms='3')
+             'sandybrown', marker='o', linestyle='', ms='8')
 
     plt.plot(time[boundaries['approach_to_contact']:boundaries['contact_to_penetration']],
              force[boundaries['approach_to_contact']:boundaries['contact_to_penetration']],
-             'salmon', marker='o', linestyle='', ms='3')
+             'salmon', marker='o', linestyle='', ms='8')
 
     plt.plot(time[boundaries['contact_to_penetration']:boundaries['penetration_to_relaxation']],
              force[boundaries['contact_to_penetration']:boundaries['penetration_to_relaxation']],
-             'darkseagreen', marker='o', linestyle='', ms='3')
+             'darkseagreen', marker='o', linestyle='', ms='8')
 
     plt.plot(time[boundaries['penetration_to_relaxation']:boundaries['relaxation_to_elastic']],
              force[boundaries['penetration_to_relaxation']:boundaries['relaxation_to_elastic']],
-             'palegreen', marker='o', linestyle='', ms='3')
+             'palegreen', marker='o', linestyle='', ms='8')
 
     plt.plot(time[boundaries['relaxation_to_elastic']:boundaries['elastic_to_fluidized']],
              force[boundaries['relaxation_to_elastic']:boundaries['elastic_to_fluidized']],
-             'mediumaquamarine', marker='o', linestyle='', ms='3')
+             'mediumaquamarine', marker='o', linestyle='', ms='8')
 
     plt.plot(time[boundaries['elastic_to_fluidized']:boundaries['fluidized_to_meniscus']],
              force[boundaries['elastic_to_fluidized']:boundaries['fluidized_to_meniscus']],
-             'cornflowerblue', marker='o', linestyle='', ms='3')
+             'cornflowerblue', marker='o', linestyle='', ms='8')
 
     plt.plot(time[boundaries['fluidized_to_meniscus']:boundaries['meniscus_to_breakage']],
              force[boundaries['fluidized_to_meniscus']:boundaries['meniscus_to_breakage']],
-             'mediumslateblue', marker='o', linestyle='', ms='3')
+             'mediumslateblue', marker='o', linestyle='', ms='8')
 
     plt.plot(time[boundaries['meniscus_to_breakage']:],
              force[boundaries['meniscus_to_breakage']:],
-             'purple', marker='o', linestyle='', ms='3')
+             'purple', marker='o', linestyle='', ms='8')
     plt.xlabel(r'$t$ (s)')
     plt.ylabel(r'$F$ (mN)')
     name = ''.join(['Force_vs_tps_', file_splitted_name[0] , '_', file_splitted_name[1] ,'_',file_splitted_name[2],'.svg'])
@@ -134,34 +135,34 @@ def plot_diff_regions_f_vs_p(position,force,boundaries,file_splitted_name):
 
     plt.plot(position[:boundaries['approach_to_contact']],
              force[:boundaries['approach_to_contact']],
-             'sandybrown', marker='o', linestyle='', ms='3')
+             'sandybrown', marker='o', linestyle='', ms='8')
 
     plt.plot(position[boundaries['approach_to_contact']:boundaries['contact_to_penetration']],
              force[boundaries['approach_to_contact']:boundaries['contact_to_penetration']],
-             'salmon', marker='o', linestyle='', ms='3')
+             'salmon', marker='o', linestyle='', ms='8')
     plt.plot(position[boundaries['contact_to_penetration']:boundaries['penetration_to_relaxation']],
              force[boundaries['contact_to_penetration']:boundaries['penetration_to_relaxation']],
-             'darkseagreen', marker='o', linestyle='', ms='3')
+             'darkseagreen', marker='o', linestyle='', ms='8')
 
     plt.plot(position[boundaries['penetration_to_relaxation']:boundaries['relaxation_to_elastic']],
              force[boundaries['penetration_to_relaxation']:boundaries['relaxation_to_elastic']],
-             'palegreen', marker='o', linestyle='', ms='3')
+             'palegreen', marker='o', linestyle='', ms='8')
 
     plt.plot(position[boundaries['relaxation_to_elastic']:boundaries['elastic_to_fluidized']],
              force[boundaries['relaxation_to_elastic']:boundaries['elastic_to_fluidized']],
-             'mediumaquamarine', marker='o', linestyle='', ms='3')
+             'mediumaquamarine', marker='o', linestyle='', ms='8')
 
     plt.plot(position[boundaries['elastic_to_fluidized']:boundaries['fluidized_to_meniscus']],
              force[boundaries['elastic_to_fluidized']:boundaries['fluidized_to_meniscus']],
-             'cornflowerblue', marker='o', linestyle='', ms='3')
+             'cornflowerblue', marker='o', linestyle='', ms='8')
 
     plt.plot(position[boundaries['fluidized_to_meniscus']:boundaries['meniscus_to_breakage']],
              force[boundaries['fluidized_to_meniscus']:boundaries['meniscus_to_breakage']],
-             'mediumslateblue', marker='o', linestyle='', ms='3')
+             'mediumslateblue', marker='o', linestyle='', ms='8')
 
     plt.plot(position[boundaries['meniscus_to_breakage']:],
              force[boundaries['meniscus_to_breakage']:],
-             'purple', marker='o', linestyle='', ms='3')
+             'purple', marker='o', linestyle='', ms='8')
     plt.xlabel(r'$p$ (mm)')
     plt.ylabel(r'$F$ (mN)')
     name = ''.join(['Force_vs_position_', file_splitted_name[0] , '_', file_splitted_name[1] ,'_',file_splitted_name[2],'.svg'])
@@ -674,18 +675,21 @@ def ratio_btw_slopes_all_plates(bd):
     """
 
     names_by_plate = gt.get_names_files_same_plate(bd)
+    dict_plates = gt.get_dict_plates()
     for lame, _ in sorted(names_by_plate.items()):
         speed = []
         ratio = []
         error = []
+        lame_number = int(re.findall(r'\d+', lame)[0])
         for name in sorted(names_by_plate[lame]):
             speed += [bd[name]['speed']]
             ratio += [-bd[name]['fit_meniscus'][0]/bd[name]['fit_penetration'][0]]
             error += [bd[name]['fit_meniscus'][4]/bd[name]['fit_penetration'][0] - bd[name]['fit_meniscus'][0]*bd[name]['fit_penetration'][4]/(bd[name]['fit_penetration'][0]**2)]
-        plt.plot(speed, ratio, label=int(re.findall(r'\d+', bd[name]['file_splitted_name'][0])[0]), linestyle='', marker='o', ms = 4)
-        plt.errorbar(speed, ratio, yerr=error, fmt='', marker='', linestyle='none', elinewidth=0.5, capthick=0.5, capsize=1, color='gray')
-    legend = plt.legend(title='Plate :', prop={'size':11},  ncol=2)
-    plt.setp(legend.get_title(),fontsize=13)
+
+        plt.plot(speed, ratio, label=str(dict_plates[str(lame_number)]), linestyle='', marker='o', ms = 10)
+        plt.errorbar(speed, ratio, yerr=error, fmt='', marker='', linestyle='none', elinewidth=1, capthick=1, capsize=3, color='gray')
+    legend = plt.legend(title=r'$a $ (mm):', prop={'size':2},  ncol=2)
+    plt.setp(legend.get_title(),fontsize=25)
     plt.ylim(ymin=0.99, ymax=1.01)
     plt.xlabel(r'$V $(mm/s)')
     plt.ylabel(r'${\tau_1}/{\tau_2}$')
@@ -893,7 +897,27 @@ def plot_relaxation_s_vs_t(bd):
         plt.savefig( 'Contrainte_relaxation_' + bd[name]['file_splitted_name'][0] + '.svg')
         plt.close()
 
-def plot_max_force_plate_width_all_files(bd, variables):
+def plot_extraction_s_vs_p(bd):
+    names_by_plate = gt.get_names_files_same_plate(bd)
+
+
+    for lame, _ in sorted(names_by_plate.items()):
+        for name in sorted(names_by_plate[lame]):
+            bound1 = bd[name]['boundaries']['relaxation_to_elastic']
+            bound2 = bd[name]['boundaries']['meniscus_to_breakage']
+            position = -1* (bd[name]['position'][bound1:bound2] - bd[name]['position'][bound1])
+            stress = bd[name]['stress'][bound1:bound2]
+            plt.plot(position, stress, label=bd[name]['speed'], linestyle='', marker='o', ms = 12)
+        legend = plt.legend(title='V (mm/s) :', prop={'size':11}, ncol=2)
+        plt.setp(legend.get_title(),fontsize=13)
+        plt.xlim(xmax=62)
+        plt.xlabel(r'$p$ (mm)')
+        plt.ylabel(r'$\tau_p $ (Pa)')
+        plt.tight_layout()
+        plt.savefig( 'Contrainte_position_extr_' + bd[name]['file_splitted_name'][0] + '.svg')
+        plt.close()
+
+def plot_max_force_extraction(bd, variables):
     """
     Saves a plot of all mean stress during penetration period for all velocities
 
@@ -909,24 +933,87 @@ def plot_max_force_plate_width_all_files(bd, variables):
     """
 
     names_by_plate = gt.get_names_files_same_plate(bd)
-    mean_stress_rel = gt.get_mean_stress_relaxation(bd)
+    dict_plates = gt.get_dict_plates()
     for lame, _ in sorted(names_by_plate.items()):
         speed = []
         gamma = []
+        force_max_corrigee = []
         n=0
+        lame_number = int(re.findall(r'\d+', lame)[0])
         for name in sorted(names_by_plate[lame]):
             speed += [bd[name]['speed']] # Vitesse en mm/s
             bound = bd[name]['boundaries']['fluidized_to_meniscus'] # Argument correspondant à la force maximale pendant l'extraction
             force_max = bd[name]['force'][bound] # Force maximale en mN
-            width = variables['plate_width'] # Largeur de la plaque en mm
-            mean_stress = mean_stress_rel[lame]['mean_stress'][n]
-            gamma += [abs(force_max - mean_stress)/(2*width)] # mesure de la tension de surface ?
-            n+=1
-        plt.plot(speed, gamma, linestyle='-', marker='o', ms = 4, label=int(re.findall(r'\d+', bd[name]['file_splitted_name'][0])[0]))
-    legend = plt.legend(title='Plate :', prop={'size':11}, ncol=2)
-    plt.setp(legend.get_title(),fontsize=13)
+            force_max_corrigee += [abs(force_max - bd[name]['force'][bd[name]['boundaries']['relaxation_to_elastic']])] # force max moins la valeur à la fin de la relaxation
+        plt.plot(speed, force_max_corrigee, linestyle='-', marker='o', ms = 10, label=str(dict_plates[str(lame_number)]))
+    legend = plt.legend(title='Roughness :', prop={'size':18}, ncol=2)
+    plt.setp(legend.get_title(),fontsize=20)
     plt.xlabel(r'$V$ (mm/s)')
-    plt.ylabel(r'$ \gamma $ (N/m)')
+    plt.ylabel(r'$ F_{max}^{IV} $ (mN)')
     plt.tight_layout()
-    plt.savefig('Surf_tension_vs_speed' + '.svg')
+    plt.savefig('Force_max_corrigee_extr' + '.svg')
     plt.close()
+
+
+def get_integrale_extraction_all_files(bd):
+    """
+    Parameters
+    bd : big dictionnary containing all informations about the data files
+    -------
+
+    Returns
+    -------
+
+    """
+    dict_plates = gt.get_dict_plates()
+    names_by_plate = gt.get_names_files_same_plate(bd)
+    for lame, _ in sorted(names_by_plate.items()):
+        for name in sorted(names_by_plate[lame]):
+            bound1 = bd[name]['boundaries']['relaxation_to_elastic']
+            bound2 = bd[name]['boundaries']['meniscus_to_breakage']
+            x = -1* (bd[name]['position'][bound1:bound2] - bd[name]['position'][bound1])
+            y = abs(bd[name]['force'][bound1:bound2] - bd[name]['force'][bound1])
+            spl = UnivariateSpline(x,y)
+            integral = []
+            for i in range(0, x.size):
+                integral += [spl.integral(0,x[i])]
+            plt.plot(x, integral, linestyle='--', marker='o', ms = 5)
+            plt.plot(x, y, linestyle='-', marker='', ms = 12)
+            plt.xlabel(r'$p$ (mm)')
+            plt.ylabel(r'$F $ (mN) $\& E$ (J)')
+            plt.tight_layout()
+            plt.savefig( 'Force_et_integrale_extr' + name + '.svg')
+            plt.close()
+
+def get_integrale_extraction_by_plate(bd):
+    """
+    Parameters
+    bd : big dictionnary containing all informations about the data files
+    -------
+
+    Returns
+    -------
+
+    """
+    names_by_plate = gt.get_names_files_same_plate(bd)
+    dict_plates = gt.get_dict_plates()
+    for lame, _ in sorted(names_by_plate.items()):
+        lame_number = int(re.findall(r'\d+', lame)[0])
+        for name in sorted(names_by_plate[lame]):
+            bound1 = bd[name]['boundaries']['relaxation_to_elastic']
+            bound2 = bd[name]['boundaries']['meniscus_to_breakage']
+            x = -1* (bd[name]['position'][bound1:bound2] - bd[name]['position'][bound1])
+            y = abs(bd[name]['force'][bound1:bound2] - bd[name]['force'][bound1])
+            spl = UnivariateSpline(x,y)
+            integral = []
+            for i in range(0, x.size):
+                integral += [spl.integral(0,x[i])]
+            plt.plot(x, integral, linestyle='--', marker='o', ms = 5,
+            label=re.sub("[^0-9]", "", bd[name]['file_splitted_name'][1]))
+        legend = plt.legend(title=r'$\vec{V}$ (mm/s):', prop={'size':18}, ncol=2)
+        plt.setp(legend.get_title(),fontsize=20)
+        plt.xlabel(r'$p$ (mm)')
+        plt.ylabel(r'$E$ (J)')
+        plt.tight_layout()
+        plt.savefig( 'Integrale_fin_extr_' + bd[name]['file_splitted_name'][0] + '.svg')
+        plt.close()

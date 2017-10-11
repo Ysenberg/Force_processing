@@ -30,11 +30,12 @@ from matplotlib import rc
 
 plt.rc('text', usetex=True)
 plt.rc('font',**{'family':'sans-serif','sans-serif':['Helvetica']})
+plt.rcParams["figure.figsize"] = [12.8,8.8]
 
 # print(set([f.name for f in matplotlib.font_manager.fontManager.ttflist]))
 
 
-sns.set(context='paper', style ='ticks', font_scale=2.5, font = 'Symbola', rc = {"xtick.direction" : u"in", "ytick.direction" : u"in"})
+sns.set(context='poster', style ='ticks', font_scale=2.5, font = 'Symbola', rc = {"xtick.direction" : u"in", "ytick.direction" : u"in"})
 
 sns.set_palette(['forestgreen', 'LightSeaGreen',  'Aquamarine', 'MediumSlateBlue', 'MidnightBlue', 'RosyBrown', 'Brown', 'Chocolate', 'goldenrod', 'olive', 'yellowgreen', 'gold', 'darkorange', 'orangered', 'crimson'])
 os.listdir('.')
@@ -53,7 +54,7 @@ variables = yaml.load(open(yaml_files[0], 'r'))
 
 bd = gt.big_dictionnary()
 
-gt.full_stress_processing_relaxation(bd)
+myplt.get_integrale_extraction_by_plate(bd)
 
 
 
