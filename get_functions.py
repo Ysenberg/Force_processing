@@ -1,25 +1,20 @@
 import numpy as np
-from scipy.optimize import lsq_linear
 from scipy.interpolate import interp1d
 from scipy import constants
 import scipy as sp
 import matplotlib.colors as colors
 import matplotlib.pyplot as plt
-from itertools import compress
 import glob
 import yaml
 import re
 import os
 from scipy.signal import savgol_filter
-from yaml import load, dump
 import pandas as pd
 import plot_functions as myplt
 import matplotlib.image as mpimg
 from scipy.optimize import curve_fit
 import scipy.optimize as spopt
-import glob
 import seaborn as sns
-import lineregress as myregress
 import pylab as pl
 from matplotlib import rc
 
@@ -516,7 +511,7 @@ def full_stress_processing_penetration(bd):
         #plt.xscale("log")
         #plt.yscale("log")
         plt.tight_layout()
-        plt.savefig('Mean_stress_while_penetration_vs_speed_' + lame + '.svg')
+        plt.savefig('Mean_stress_while_penetration_vs_speed_' + lame + '.pdf')
         plt.close()
 
     plt.plot(lames, list_pentes, linestyle='', marker='o', ms = 14)
@@ -528,7 +523,7 @@ def full_stress_processing_penetration(bd):
     plt.xscale("log")
     plt.yscale("log")
     plt.tight_layout()
-    plt.savefig('Pente_contrainte_moyenne_log' + '.svg')
+    plt.savefig('Pente_contrainte_moyenne_log' + '.pdf')
     plt.close()
 
     plt.plot(lames, list_pentes, linestyle='', marker='o', ms = 14)
@@ -538,7 +533,7 @@ def full_stress_processing_penetration(bd):
     plt.ticklabel_format(style='sci', axis='both')
     plt.xlim(xmin=0.01, xmax=0.25)
     plt.tight_layout()
-    plt.savefig('Pente_contrainte_moyenne' + '.svg')
+    plt.savefig('Pente_contrainte_moyenne' + '.pdf')
     plt.close()
 
     plt.plot(lames, list_ord_origine, linestyle='', marker='o', ms = 14)
@@ -549,8 +544,109 @@ def full_stress_processing_penetration(bd):
     plt.xlabel(r'$a$ (mm)')
     plt.ylabel(r'$\tau_0 $ (Pa)')
     plt.tight_layout()
-    plt.savefig('Origine_contrainte_moyenne' + '.svg')
+    plt.savefig('Origine_contrainte_moyenne' + '.pdf')
     plt.close()
+
+    return {'tau_0': list_ord_origine,
+            'err_tau_0' : err_origine,
+            'kappa' : list_pentes,
+            'err_kappa' :   err_pente
+           }
+
+def get_dict_penetration(bd):
+
+    """
+    Plots :
+     - all mean_stress vs speed files with fitting line and error bars
+     - intersection values of the preceding plots
+     - gradient values of the plots
+        Parameters
+    ----------
+    Returns :
+     - dictionnary
+    -------
+    """
+    mean_stress = get_mean_stress_penetration(bd)
+    dict_plates = get_dict_plates()
+    names_by_plate = get_names_files_same_plate(bd)
+    lames = []
+    list_pentes = []
+    list_ord_origine = []
+    err_pente = []
+    err_origine = []
+    for lame, _ in sorted(names_by_plate.items()):
+        x = np.asarray(mean_stress[lame]['speed'])
+        y = np.asarray(mean_stress[lame]['mean_stress_penetration'])
+        y_err = np.asarray(mean_stress[lame]['std_stress_penetration'])
+        def fit_funct(x, pente, ord_origine):
+            return pente*x + ord_origine
+        params = curve_fit(fit_funct, x, y)
+        [pente, ord_origine] = params[0]
+        [std_pente, std_origine] = np.sqrt(np.diag(params[1]))
+        x_fitted = [0] + mean_stress[lame]['speed']
+        truc = list(pente * x + ord_origine)
+        y_fitted = [ord_origine] + truc
+        list_pentes += [pente]
+        list_ord_origine += [ord_origine]
+        err_pente += [std_pente]
+        lame_number = int(re.findall(r'\d+', lame)[0])
+        lames += [dict_plates[str(lame_number)]]
+        err_origine += [std_origine]
+    return {'tau_0': list_ord_origine,
+            'err_tau_0' : err_origine,
+            'kappa' : list_pentes,
+            'err_kappa' :   err_pente
+           }
+
+def get_dict_relaxation(bd):
+    """
+    Plots :
+     - all mean_stress vs speed files with fitting line and error bars
+     - intersection values of the preceding plots
+     - gradient values of the plots
+
+    Parameters
+    ----------
+
+    Returns
+    -------
+     - dictionnary
+    """
+    mean_stress = get_mean_stress_relaxation(bd)
+    dict_plates = get_dict_plates()
+    names_by_plate = get_names_files_same_plate(bd)
+    lames = []
+    list_pentes = []
+    list_ord_origine = []
+    err_pente = []
+    err_origine = []
+    err_tau_m = []
+    tau_m = []
+    for lame, _ in sorted(names_by_plate.items()):
+        x = np.asarray(mean_stress[lame]['speed'])
+        y = np.asarray(mean_stress[lame]['mean_stress'])
+        y_err = np.asarray(mean_stress[lame]['std_stress'])
+        def fit_funct(x, pente, ord_origine):
+            return pente*x + ord_origine
+        params = curve_fit(fit_funct, x, y)
+        [pente, ord_origine] = params[0]
+        [std_pente, std_origine] = np.sqrt(np.diag(params[1]))
+        x_fitted = [0] + mean_stress[lame]['speed']
+        y_fitted = [ord_origine] + list(pente * x + ord_origine)
+        list_pentes += [pente]
+        list_ord_origine += [ord_origine]
+        err_pente += [std_pente]
+        err_origine += [std_origine]
+
+        lame_number = int(re.findall(r'\d+', lame)[0])
+        lames += [dict_plates[str(lame_number)]]
+        tau_m += [np.mean(y)]
+        err_tau_m += [np.std(y)]
+
+
+    return {'tau_m': tau_m,
+            'err_tau_m' : err_tau_m,
+           }
 
 def full_stress_processing_relaxation(bd):
     """
@@ -586,7 +682,7 @@ def full_stress_processing_relaxation(bd):
         x = np.asarray(mean_stress[lame]['speed'])
         y = np.asarray(mean_stress[lame]['mean_stress'])
         y_err = np.asarray(mean_stress[lame]['std_stress'])
-        """
+
         def fit_funct(x, pente, ord_origine):
             return pente*x + ord_origine
         params = curve_fit(fit_funct, x, y)
@@ -598,7 +694,7 @@ def full_stress_processing_relaxation(bd):
         list_ord_origine += [ord_origine]
         err_pente += [std_pente]
         err_origine += [std_origine]
-        """
+
         lame_number = int(re.findall(r'\d+', lame)[0])
         lames += [dict_plates[str(lame_number)]]
         tau_m += [np.mean(y)]
@@ -612,7 +708,7 @@ def full_stress_processing_relaxation(bd):
         plt.xlabel(r'$V$ (mm/s)')
         plt.ylabel(r'$ \bar{\tau_p} $ (Pa)')
         plt.tight_layout()
-        plt.savefig('Mean_stress_while_relaxation_vs_speed_' + lame + '.svg')
+        plt.savefig('Mean_stress_while_relaxation_vs_speed_' + lame + '.pdf')
         plt.close()
 
     plt.plot(lames, tau_m, linestyle='', marker='o', ms = 14)
@@ -626,7 +722,56 @@ def full_stress_processing_relaxation(bd):
     plt.plot([0,0.22],[1.4,1.4],linestyle='--',color='black',lw=1.5)
     plt.text(0.01,1.55,r'$\tau_c = $1.4 Pa')
     plt.tight_layout()
-    plt.savefig('tau_m_relaxation' + '.svg')
+    plt.savefig('tau_m_relaxation' + '.pdf')
     plt.close()
 
-    return lames, tau_m, err_tau_m
+    return {'tau_m': tau_m,
+            'err_tau_m' : err_tau_m,
+           }
+
+def get_interpolation_synchro_video(bd, name, start_time):
+    """
+    ----------
+    How to use
+    ----------
+    You have to find start_time by splitting a video into images and then by using the programm video_processing wich needs the image number corresponding to the end of the relaxation regime.
+    command to use to get the time : print(bd[name]['time'][bd[name]['boundaries']['relaxation_to_elastic']])
+    example of full working call in the main program :
+    start_time = 3.99
+    name = "Lam1_V12_001"
+    print(bd[name]['time'][bd[name]['boundaries']['relaxation_to_elastic']])
+    gt.get_interpolation_synchro_video(bd, name, start_time)
+    ----------
+    Parameters
+    ----------
+    bd : big dictionnary containing all infos about text files present here
+    name : name of the file to interpolate
+    start_time : first line to write in the txt files
+    ----------
+    Returns
+    ----------
+    two *.txt files containing times and corresponding interpolated force and stress
+    ----------
+    """
+    def frange(x, y, jump):
+      while x < y:
+        yield x
+        x += jump
+
+    Time = bd[name]['time']
+    Force = bd[name]['force']
+    Stress = bd[name]['stress']
+    End_time = Time[-1]
+    Step = 1001/30000
+    file_force = open('./Videos/' + name +  '/a_force_interpolation.txt', 'w')
+    file_stress = open('./Videos/' + name +  '/a_stress_interpolation.txt', 'w')
+    force_interp = interp1d(Time, Force)
+    stress_interp = interp1d(Time, Stress)
+    for x in frange(start_time, End_time, Step):
+        res = str(round(x, 2)) + ' ' + str(force_interp(x))
+        file_force.write( str(res) + '\n')
+        res = str(round(x, 2)) + ' ' + str(stress_interp(x))
+        file_stress.write( str(res) + '\n')
+
+    file_stress.close()
+    file_force.close()

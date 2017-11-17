@@ -1,7 +1,3 @@
-#------------------
-# Ici, on crée un énorme dictionnaire qui contient toutes les données des fichiers du dossier où on est
-#------------------
-
 import numpy as np
 import numpy.fft as fft
 import scipy as sp
@@ -24,75 +20,28 @@ from scipy.optimize import curve_fit
 import scipy.optimize as spopt
 import glob
 import seaborn as sns
-import lineregress as myregress
 import pylab as pl
 from matplotlib import rc
+import decimal
+
+# Annoyingly long part for graphics settings.
 
 plt.rc('text', usetex=True)
 plt.rc('font',**{'family':'sans-serif','sans-serif':['Helvetica']})
 plt.rcParams["figure.figsize"] = [12.8,8.8]
-
-# print(set([f.name for f in matplotlib.font_manager.fontManager.ttflist]))
-
-
 sns.set(context='poster', style ='ticks', font_scale=2.5, font = 'Symbola', rc = {"xtick.direction" : u"in", "ytick.direction" : u"in"})
-
 sns.set_palette(['forestgreen', 'LightSeaGreen',  'Aquamarine', 'MediumSlateBlue', 'MidnightBlue', 'RosyBrown', 'Brown', 'Chocolate', 'goldenrod', 'olive', 'yellowgreen', 'gold', 'darkorange', 'orangered', 'crimson'])
+
+# ------------------- Read the configuration file
+
 os.listdir('.')
-
-#current_palette = sns.color_palette()
-
-
-# Read the configuration file.
-yaml_files = glob.glob('*.yml')
+yaml_file = glob.glob('*.yml')
 try:
-    assert(len(yaml_files) == 1)
+    assert(len(yaml_file) == 1)
 except AssertionError:
     raise RuntimeError('Only one yaml file must be present in the current directory.')
+variables = yaml.load(open(yaml_file[0], 'r'))
 
-variables = yaml.load(open(yaml_files[0], 'r'))
+# ------------------- Real work
 
 bd = gt.big_dictionnary()
-
-myplt.get_integrale_extraction_by_plate(bd)
-
-
-
-
-
-
-"""
-----------------
-Pour faire les figures du rapport sur la partie extraction
-----------------
-
-
-
-name = 'Lam2_V12_001'
-bound1 = bd[name]['boundaries']['relaxation_to_elastic']
-bound2 = bd[name]['boundaries']['elastic_to_fluidized']
-bound3 = bd[name]['boundaries']['fluidized_to_meniscus']
-bound4 = bd[name]['boundaries']['meniscus_to_breakage']
-def take_time(bound, bound2):
-	bound1 = bd[name]['boundaries']['relaxation_to_elastic']
-	return bd[name]['time'][bound:bound2] - bd[name]['time'][bound1]
-
-
-plt.plot(take_time(bound1,bound2), bd[name]['force'][bound1:bound2], linestyle='', marker='o', ms = 4, color='mediumaquamarine')
-plt.plot(take_time(bound2,bound3), bd[name]['force'][bound2:bound3], linestyle='', marker='o', ms = 4, color='cornflowerblue')
-plt.plot(take_time(bound3,bound4), bd[name]['force'][bound3:bound4], linestyle='', marker='o', ms = 4, color='mediumslateblue')
-plt.xlabel(r'$t $(s)')
-plt.ylabel(r'$ F $ (mN)')
-plt.savefig('Retire.svg')
-plt.close()
-
-
-
-plt.plot(take_time(bound1,bound2), bd[name]['stress'][bound1:bound2], linestyle='', marker='o', ms = 4, color='mediumaquamarine')
-plt.plot(take_time(bound2,bound3), bd[name]['stress'][bound2:bound3], linestyle='', marker='o', ms = 4, color='cornflowerblue')
-plt.plot(take_time(bound3,bound4), bd[name]['stress'][bound3:bound4], linestyle='', marker='o', ms = 4, color='cornflowerblue')
-plt.xlabel(r'$t $(s)')
-plt.ylabel(r'$ \tau_p $ (Pa)')
-plt.savefig('stress_retire.svg')
-plt.close()
-"""
